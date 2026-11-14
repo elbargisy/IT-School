@@ -293,71 +293,82 @@ btn.addEventListener('click', () => {
 
 // --- 2. ARTICLE STORE (LOCALSTORAGE DATABASE) ---
 const ArticleStore = {
-  STORAGE_KEY: "bargisy_eschool_articles_v4",
+  CUSTOM_KEY: "bargisy_eschool_custom_v1",
 
   getSeedArticles() {
-    const excelLessons = (typeof window !== "undefined" && window.EXCEL_100_LESSONS) ? window.EXCEL_100_LESSONS : [];
-    const pythonLessons = (typeof window !== "undefined" && window.PYTHON_100_LESSONS) ? window.PYTHON_100_LESSONS : [];
-    const frontendLessons = (typeof window !== "undefined" && window.FRONTEND_ALL_LESSONS) ? window.FRONTEND_ALL_LESSONS : [];
-    const itLessons = (typeof window !== "undefined" && window.IT_100_LESSONS) ? window.IT_100_LESSONS : [];
+    const excel = (typeof window !== "undefined" && window.EXCEL_100_LESSONS) ? window.EXCEL_100_LESSONS : (typeof EXCEL_100_LESSONS !== "undefined" ? EXCEL_100_LESSONS : []);
+    const python = (typeof window !== "undefined" && window.PYTHON_100_LESSONS) ? window.PYTHON_100_LESSONS : (typeof PYTHON_100_LESSONS !== "undefined" ? PYTHON_100_LESSONS : []);
+    const html = (typeof window !== "undefined" && window.HTML_20_LESSONS) ? window.HTML_20_LESSONS : (typeof HTML_20_LESSONS !== "undefined" ? HTML_20_LESSONS : []);
+    const css = (typeof window !== "undefined" && window.CSS_100_LESSONS) ? window.CSS_100_LESSONS : (typeof CSS_100_LESSONS !== "undefined" ? CSS_100_LESSONS : []);
+    const js = (typeof window !== "undefined" && window.JS_100_LESSONS) ? window.JS_100_LESSONS : (typeof JS_100_LESSONS !== "undefined" ? JS_100_LESSONS : []);
+    const it = (typeof window !== "undefined" && window.IT_100_LESSONS) ? window.IT_100_LESSONS : (typeof IT_100_LESSONS !== "undefined" ? IT_100_LESSONS : []);
+
+    let frontend = [...html, ...css, ...js];
+    if (frontend.length === 0 && typeof window !== "undefined" && window.FRONTEND_ALL_LESSONS) {
+      frontend = window.FRONTEND_ALL_LESSONS;
+    }
 
     return [
-      ...excelLessons,
-      ...pythonLessons,
-      ...frontendLessons,
-      ...itLessons,
+      ...excel,
+      ...python,
+      ...frontend,
+      ...it,
       ...DEFAULT_ARTICLES
     ];
   },
 
   init() {
-    const allSeeds = this.getSeedArticles();
-    const stored = localStorage.getItem(this.STORAGE_KEY);
-    
-    if (!stored) {
-      // Migrate any user-created custom drafts from previous version
-      try {
-        const oldData = localStorage.getItem("bargisy_eschool_articles_v3") || localStorage.getItem("bargisy_eschool_articles_v2");
-        if (oldData) {
-          const parsedOld = JSON.parse(oldData);
-          const customArticles = parsedOld.filter(a => typeof a.id === "string" && a.id.startsWith("art_"));
-          if (customArticles.length > 0) {
-            allSeeds.unshift(...customArticles);
-          }
-        }
-      } catch (err) {
-        console.warn("Storage migration note:", err);
-      }
-      this.saveAll(allSeeds);
-    } else {
-      try {
-        const parsed = JSON.parse(stored);
-        if (parsed.length < allSeeds.length) {
-          const customArticles = parsed.filter(a => typeof a.id === "string" && a.id.startsWith("art_"));
-          this.saveAll([...customArticles, ...allSeeds]);
-        }
-      } catch (e) {
-        this.saveAll(allSeeds);
-      }
+    // Migrate any user-created custom articles from legacy storage keys, then clean up huge legacy keys
+    try {
+      const legacyKeys = [
+        "bargisy_eschool_articles_v4",
+        "bargisy_eschool_articles_v3",
+        "bargisy_eschool_articles_v2",
+        "bargisy_eschool_articles_v1",
+        "bargisy_eschool_articles"
+      ];
+      legacyKeys.forEach(k => {
+        try { localStorage.removeItem(k); } catch(e) {}
+      });
+
+      // Keep only valid user-authored articles
+      const customList = this.getCustomArticles();
+      this.saveCustomArticles(customList);
+    } catch(err) {
+      console.warn("Storage init notice:", err);
+    }
+  },
+
+  getCustomArticles() {
+    try {
+      const data = localStorage.getItem(this.CUSTOM_KEY);
+      const parsed = data ? JSON.parse(data) : [];
+      if (!Array.isArray(parsed)) return [];
+      // Only keep genuine user-authored articles (id starts with art_)
+      return parsed.filter(a => typeof a.id === "string" && a.id.startsWith("art_"));
+    } catch (e) {
+      return [];
+    }
+  },
+
+  saveCustomArticles(articles) {
+    try {
+      localStorage.setItem(this.CUSTOM_KEY, JSON.stringify(articles));
+    } catch (e) {
+      console.error("Error saving custom articles:", e);
     }
   },
 
   getAllRaw() {
-    try {
-      const data = localStorage.getItem(this.STORAGE_KEY);
-      return data ? JSON.parse(data) : this.getSeedArticles();
-    } catch (e) {
-      console.error("Error reading localStorage:", e);
-      return this.getSeedArticles();
-    }
+    const seeds = this.getSeedArticles();
+    const custom = this.getCustomArticles();
+    return [...custom, ...seeds];
   },
 
   saveAll(articles) {
-    try {
-      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(articles));
-    } catch (e) {
-      console.error("Error writing to localStorage:", e);
-    }
+    // Filter down to only custom articles to keep storage light and fast
+    const customOnly = articles.filter(a => typeof a.id === "string" && a.id.startsWith("art_"));
+    this.saveCustomArticles(customOnly);
   },
 
   list({ status = null, category = "all", track = null, search = "" } = {}) {
@@ -389,10 +400,9 @@ const ArticleStore = {
       );
     }
 
-    // When viewing lessons within a specific track or category, sort strictly in ascending sequential order
-    const isSpecificTrack = track && track !== "all";
-    const isSpecificCategory = category && category !== "all";
-    if (isSpecificTrack || isSpecificCategory) {
+    // --- SORTING LOGIC ---
+    // 1. If viewing a specific individual track (css, javascript, html, python, it_skills):
+    if (track && track !== "all" && track !== "frontend") {
       return list.sort((a, b) => {
         const numA = a.lesson_number || parseInt((a.title.match(/Lesson\s+(\d+)/i) || [0, 0])[1], 10) || 0;
         const numB = b.lesson_number || parseInt((b.title.match(/Lesson\s+(\d+)/i) || [0, 0])[1], 10) || 0;
@@ -400,8 +410,66 @@ const ArticleStore = {
       });
     }
 
-    // Default sort by updated_at descending
-    return list.sort((a, b) => new Date(b.updated_at || 0) - new Date(a.updated_at || 0));
+    // 2. If viewing the entire Front-End curriculum (all web 220): order HTML (1..20), then CSS (1..100), then JS (1..100):
+    if (track === "frontend") {
+      const subtrackOrder = { html: 1, css: 2, javascript: 3 };
+      return list.sort((a, b) => {
+        const orderA = subtrackOrder[a.track] || 99;
+        const orderB = subtrackOrder[b.track] || 99;
+        if (orderA !== orderB) return orderA - orderB;
+        const numA = a.lesson_number || parseInt((a.title.match(/Lesson\s+(\d+)/i) || [0, 0])[1], 10) || 0;
+        const numB = b.lesson_number || parseInt((b.title.match(/Lesson\s+(\d+)/i) || [0, 0])[1], 10) || 0;
+        return numA - numB;
+      });
+    }
+
+    // 3. If viewing category excel or computer_skills: sort strictly ascending 1..100
+    if (category === "excel" || category === "computer_skills") {
+      return list.sort((a, b) => {
+        const numA = a.lesson_number || parseInt((a.title.match(/Lesson\s+(\d+)/i) || [0, 0])[1], 10) || 0;
+        const numB = b.lesson_number || parseInt((b.title.match(/Lesson\s+(\d+)/i) || [0, 0])[1], 10) || 0;
+        return numA - numB;
+      });
+    }
+
+    // 4. If viewing Programming with track 'all': group by track (Python 1..100, then HTML 1..20, CSS 1..100, JS 1..100) - NEVER interleave!
+    if (category === "programming") {
+      const trackOrder = { python: 1, html: 2, css: 3, javascript: 4 };
+      return list.sort((a, b) => {
+        const tA = trackOrder[a.track] || 99;
+        const tB = trackOrder[b.track] || 99;
+        if (tA !== tB) return tA - tB;
+        const numA = a.lesson_number || parseInt((a.title.match(/Lesson\s+(\d+)/i) || [0, 0])[1], 10) || 0;
+        const numB = b.lesson_number || parseInt((b.title.match(/Lesson\s+(\d+)/i) || [0, 0])[1], 10) || 0;
+        return numA - numB;
+      });
+    }
+
+    // 5. Default sort for All Lessons (category === 'all' and track === 'all'):
+    // Custom community articles first, then Excel 1..100, Python 1..100, HTML 1..20, CSS 1..100, JS 1..100, IT 1..100
+    const catOrder = { excel: 1, programming: 2, computer_skills: 3 };
+    const progTrackOrder = { python: 1, html: 2, css: 3, javascript: 4 };
+    return list.sort((a, b) => {
+      const isCustomA = typeof a.id === "string" && a.id.startsWith("art_");
+      const isCustomB = typeof b.id === "string" && b.id.startsWith("art_");
+      if (isCustomA && !isCustomB) return -1;
+      if (!isCustomA && isCustomB) return 1;
+      if (isCustomA && isCustomB) return new Date(b.updated_at || 0) - new Date(a.updated_at || 0);
+
+      const cA = catOrder[a.category] || 99;
+      const cB = catOrder[b.category] || 99;
+      if (cA !== cB) return cA - cB;
+
+      if (a.category === "programming" && b.category === "programming") {
+        const tA = progTrackOrder[a.track] || 99;
+        const tB = progTrackOrder[b.track] || 99;
+        if (tA !== tB) return tA - tB;
+      }
+
+      const numA = a.lesson_number || parseInt((a.title.match(/Lesson\s+(\d+)/i) || [0, 0])[1], 10) || 0;
+      const numB = b.lesson_number || parseInt((b.title.match(/Lesson\s+(\d+)/i) || [0, 0])[1], 10) || 0;
+      return numA - numB;
+    });
   },
 
   get(idOrSlug) {
@@ -451,6 +519,7 @@ const ArticleStore = {
           content: data.content !== undefined ? data.content : list[idx].content,
           status: data.status || list[idx].status,
           cover_gradient: gradients[data.category] || list[idx].cover_gradient,
+          user_modified: true,
           updated_at: now
         };
         this.saveAll(list);
@@ -459,10 +528,10 @@ const ArticleStore = {
     }
 
     // Create New
-    const newId = list.length > 0 ? Math.max(...list.map(a => a.id || 0)) + 1 : 1;
+    const newId = "art_" + Date.now();
     let slug = this.slugify(data.title || "article");
     if (list.some(a => a.slug === slug)) {
-      slug = `${slug}-${newId}`;
+      slug = `${slug}-${Math.floor(Math.random() * 1000)}`;
     }
 
     const newArticle = {
@@ -503,9 +572,9 @@ const ArticleStore = {
   },
 
   delete(id) {
-    let list = this.getAllRaw();
-    list = list.filter(a => String(a.id) !== String(id));
-    this.saveAll(list);
+    let custom = this.getCustomArticles();
+    custom = custom.filter(a => String(a.id) !== String(id));
+    this.saveCustomArticles(custom);
     return true;
   },
 
@@ -1117,3 +1186,4 @@ const EditorStudio = {
 
 window.ArticleStore = ArticleStore;
 window.EditorStudio = EditorStudio;
+try { ArticleStore.init(); } catch (e) {}

@@ -135,7 +135,7 @@
                 Search
               </button>
             </div>
-            <p class="text-xs text-slate-400 mt-2">Popular: <span class="text-blue-600 cursor-pointer" onclick="App.setCategoryFilter('excel'); window.location.hash='#/browse';">XLOOKUP</span>, <span class="text-blue-600 cursor-pointer" onclick="App.setCategoryFilter('programming'); window.location.hash='#/browse';">Python Automation</span>, <span class="text-blue-600 cursor-pointer" onclick="App.setCategoryFilter('computer_skills'); window.location.hash='#/browse';">PC Diagnostics</span></p>
+            <p class="text-xs text-slate-400 mt-2">Popular: <span class="text-blue-600 cursor-pointer" onclick="App.setTrackFilter('css'); window.location.hash='#/css';">100 CSS Lessons</span>, <span class="text-blue-600 cursor-pointer" onclick="App.setTrackFilter('javascript'); window.location.hash='#/javascript';">100 JS Lessons</span>, <span class="text-blue-600 cursor-pointer" onclick="App.setTrackFilter('python'); window.location.hash='#/python';">Python (100)</span>, <span class="text-blue-600 cursor-pointer" onclick="App.setCategoryFilter('excel'); window.location.hash='#/excel';">Excel (100)</span></p>
           </div>
 
           <!-- Quick Actions -->
@@ -199,10 +199,10 @@
                 Divided into 2 dedicated paths: <strong>Python Path</strong> (100 lessons ordered from easiest to advanced) and the <strong>Front-End Developer Path</strong> (20 HTML, 100 CSS, and 100 JavaScript lessons).
               </p>
               <div class="flex flex-wrap gap-1.5 mt-4">
-                <span class="px-2 py-0.5 rounded text-xs bg-blue-50 text-blue-700 font-medium">🐍 100 Python</span>
-                <span class="px-2 py-0.5 rounded text-xs bg-orange-50 text-orange-700 font-medium">📄 20 HTML</span>
-                <span class="px-2 py-0.5 rounded text-xs bg-sky-50 text-sky-700 font-medium">🎨 100 CSS</span>
-                <span class="px-2 py-0.5 rounded text-xs bg-amber-50 text-amber-700 font-medium">⚡ 100 JS</span>
+                <a href="#/python" class="px-2 py-0.5 rounded text-xs bg-blue-50 text-blue-700 font-medium hover:bg-blue-100 transition">🐍 100 Python</a>
+                <a href="#/html" class="px-2 py-0.5 rounded text-xs bg-orange-50 text-orange-700 font-medium hover:bg-orange-100 transition">📄 20 HTML</a>
+                <a href="#/css" class="px-2 py-0.5 rounded text-xs bg-sky-50 text-sky-700 font-medium hover:bg-sky-100 transition">🎨 100 CSS</a>
+                <a href="#/javascript" class="px-2 py-0.5 rounded text-xs bg-amber-50 text-amber-700 font-medium hover:bg-amber-100 transition">⚡ 100 JS</a>
               </div>
             </div>
             <div class="mt-8 pt-4 border-t border-slate-100">
@@ -322,22 +322,31 @@
         
         <!-- Category Filter Tabs -->
         <div class="flex flex-wrap gap-1.5 w-full sm:w-auto">
-          <button id="catBtn_all" onclick="App.setCategoryFilter('all')" class="cat-filter-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-blue-600 text-white transition">
-            All Lessons
+          <button id="catBtn_all" onclick="App.setCategoryFilter('all', 'all', true)" class="cat-filter-btn px-3.5 py-2 rounded-xl text-xs font-bold bg-blue-600 text-white transition">
+            All Lessons (520)
           </button>
-          <button id="catBtn_programming" onclick="App.setCategoryFilter('programming', 'all')" class="cat-filter-btn px-3.5 py-2 rounded-xl text-xs font-medium bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 transition">
-            <i class="fa-solid fa-code text-blue-500 mr-1"></i> All Programming
+          <button id="catBtn_programming" onclick="App.setCategoryFilter('programming', 'all', true)" class="cat-filter-btn px-3.5 py-2 rounded-xl text-xs font-medium bg-white text-slate-700 border border-slate-200 hover:bg-blue-50 hover:text-blue-700 transition">
+            <i class="fa-solid fa-code text-blue-600 mr-1"></i> Programming (320)
           </button>
-          <button id="catBtn_python" onclick="App.setTrackFilter('python')" class="cat-filter-btn px-3.5 py-2 rounded-xl text-xs font-medium bg-white text-slate-700 border border-slate-200 hover:bg-blue-50 hover:text-blue-700 transition">
+          <button id="catBtn_python" onclick="App.setTrackFilter('python', true)" class="cat-filter-btn px-3.5 py-2 rounded-xl text-xs font-medium bg-white text-slate-700 border border-slate-200 hover:bg-blue-50 hover:text-blue-700 transition">
             <i class="fa-brands fa-python text-blue-600 mr-1"></i> Python (100)
           </button>
-          <button id="catBtn_frontend" onclick="App.setTrackFilter('frontend')" class="cat-filter-btn px-3.5 py-2 rounded-xl text-xs font-medium bg-white text-slate-700 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-700 transition">
-            <i class="fa-solid fa-laptop-code text-indigo-500 mr-1"></i> Front-End (220)
+          <button id="catBtn_css" onclick="App.setTrackFilter('css', true)" class="cat-filter-btn px-3.5 py-2 rounded-xl text-xs font-medium bg-white text-slate-700 border border-slate-200 hover:bg-sky-50 hover:text-sky-700 transition">
+            <i class="fa-brands fa-css3-alt text-sky-500 mr-1"></i> CSS (100)
           </button>
-          <button id="catBtn_excel" onclick="App.setCategoryFilter('excel')" class="cat-filter-btn px-3.5 py-2 rounded-xl text-xs font-medium bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 transition">
+          <button id="catBtn_javascript" onclick="App.setTrackFilter('javascript', true)" class="cat-filter-btn px-3.5 py-2 rounded-xl text-xs font-medium bg-white text-slate-700 border border-slate-200 hover:bg-amber-50 hover:text-amber-700 transition">
+            <i class="fa-brands fa-js text-amber-500 mr-1"></i> JavaScript (100)
+          </button>
+          <button id="catBtn_html" onclick="App.setTrackFilter('html', true)" class="cat-filter-btn px-3.5 py-2 rounded-xl text-xs font-medium bg-white text-slate-700 border border-slate-200 hover:bg-orange-50 hover:text-orange-700 transition">
+            <i class="fa-brands fa-html5 text-orange-500 mr-1"></i> HTML (20)
+          </button>
+          <button id="catBtn_frontend" onclick="App.setTrackFilter('frontend', true)" class="cat-filter-btn px-3.5 py-2 rounded-xl text-xs font-medium bg-white text-slate-700 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-700 transition">
+            <i class="fa-solid fa-laptop-code text-indigo-500 mr-1"></i> All Web (220)
+          </button>
+          <button id="catBtn_excel" onclick="App.setCategoryFilter('excel', 'all', true)" class="cat-filter-btn px-3.5 py-2 rounded-xl text-xs font-medium bg-white text-slate-700 border border-slate-200 hover:bg-emerald-50 hover:text-emerald-700 transition">
             <i class="fa-solid fa-table-cells text-emerald-500 mr-1"></i> Excel (100)
           </button>
-          <button id="catBtn_computer_skills" onclick="App.setCategoryFilter('computer_skills')" class="cat-filter-btn px-3.5 py-2 rounded-xl text-xs font-medium bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 transition">
+          <button id="catBtn_computer_skills" onclick="App.setCategoryFilter('computer_skills', 'all', true)" class="cat-filter-btn px-3.5 py-2 rounded-xl text-xs font-medium bg-white text-slate-700 border border-slate-200 hover:bg-purple-50 hover:text-purple-700 transition">
             <i class="fa-solid fa-laptop text-purple-500 mr-1"></i> IT Skills (100)
           </button>
         </div>
@@ -1160,14 +1169,14 @@ Click 'Run Code' above to execute your Python script...
     </div>
   </footer>
 
-  <!-- App Scripts -->
-  <script src="js/interactive.js"></script>
-  <script src="js/excel-lessons.js"></script>
-  <script src="js/python-lessons.js"></script>
-  <script src="js/frontend-lessons.js"></script>
-  <script src="js/it-lessons.js"></script>
-  <script src="js/editor.js"></script>
-  <script src="js/app.js"></script>
+  <!-- App Scripts with explicit UTF-8 and Cache-Busting -->
+  <script charset="UTF-8" src="js/interactive.js?v=20261114_final"></script>
+  <script charset="UTF-8" src="js/excel-lessons.js?v=20261114_final"></script>
+  <script charset="UTF-8" src="js/python-lessons.js?v=20261114_final"></script>
+  <script charset="UTF-8" src="js/frontend-lessons.js?v=20261114_final"></script>
+  <script charset="UTF-8" src="js/it-lessons.js?v=20261114_final"></script>
+  <script charset="UTF-8" src="js/editor.js?v=20261114_final"></script>
+  <script charset="UTF-8" src="js/app.js?v=20261114_final"></script>
 
 </body>
 </html>
