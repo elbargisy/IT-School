@@ -4,154 +4,11 @@
  * Works 100% in any modern browser by simply opening index.html.
  */
 
-// --- 1. SEED DEFAULT ARTICLES ---
+// --- 1. SEED DEFAULT ARTICLES (Programming & Computer Skills) ---
+// (Note: The 100 sequential Excel lessons are loaded from js/excel-lessons.js)
 const DEFAULT_ARTICLES = [
   {
-    id: 1,
-    title: "Mastering Excel Formulas: From SUM & IF to XLOOKUP and INDEX-MATCH",
-    slug: "mastering-excel-formulas-sum-if-xlookup",
-    category: "excel",
-    category_name: "Excel & Spreadsheets",
-    summary: "The ultimate guide to essential Excel functions that elevate your office productivity and data analysis skills from novice to pro.",
-    content: `# Mastering Excel Formulas: From SUM & IF to XLOOKUP
-
-Welcome to this core guide from **Bargisy eSchool**! Whether you are preparing financial reports, managing inventory, or analyzing sales data, mastering Excel formulas is one of the highest-ROI skills in modern business.
-
----
-
-## 1. The Core 5 Mathematical & Statistical Functions
-
-Before diving into lookups, ensure you know these foundation functions inside and out:
-
-\`\`\`excel
-=SUM(A2:A100)        -- Calculates the total of numeric values in range
-=AVERAGE(B2:B100)    -- Computes arithmetic mean
-=COUNT(C2:C100)      -- Counts cells containing numbers
-=COUNTA(C2:C100)     -- Counts non-empty cells (numbers or text)
-=MAX(D2:D100)        -- Finds highest value
-=MIN(D2:D100)        -- Finds lowest value
-\`\`\`
-
-> [!TIP]
-> **Keyboard Shortcut**: Press \`Alt + =\` anywhere below or beside a column of numbers to instantly auto-insert the \`=SUM(...)\` formula!
-
----
-
-## 2. Logical Decision Making with \`IF\`, \`AND\`, and \`OR\`
-
-The \`IF\` function allows your spreadsheets to react dynamically:
-
-\`\`\`excel
-=IF(logical_test, value_if_true, value_if_false)
-\`\`\`
-
-### Real-World Example: Sales Commission
-If sales in cell \`B2\` exceed $10,000, award a 5% bonus; otherwise 2%:
-\`\`\`excel
-=IF(B2 > 10000, B2 * 0.05, B2 * 0.02)
-\`\`\`
-
-### Combining with \`AND\` & \`OR\`
-\`\`\`excel
-=IF(AND(B2 >= 10000, C2 >= 90), "Top Performer", "Standard")
-\`\`\`
-
----
-
-## 3. The Modern Lookup Champion: \`XLOOKUP\`
-
-If you are using modern Excel (Office 365 / Excel 2021+), **XLOOKUP** completely replaces \`VLOOKUP\` and \`HLOOKUP\`.
-
-### Why XLOOKUP is superior:
-1. Searches both vertically and horizontally.
-2. Does **not** break when new columns are inserted.
-3. Left-lookups work out of the box (VLOOKUP could only look to the right).
-4. Defaults to exact match (no more accidental \`TRUE\` fuzzy matches).
-5. Built-in error handling via the 4th parameter.
-
-### Syntax:
-\`\`\`excel
-=XLOOKUP(lookup_value, lookup_array, return_array, [if_not_found])
-\`\`\`
-
-### Example:
-Looking up an Employee's Department by their Employee ID:
-\`\`\`excel
-=XLOOKUP(F2, A2:A100, C2:C100, "Employee Not Found")
-\`\`\`
-
----
-
-## 4. Conditional Aggregations: \`SUMIFS\` & \`COUNTIFS\`
-
-Need to sum totals only for a specific department or date range? \`SUMIFS\` is your powerhouse:
-
-\`\`\`excel
-=SUMIFS(sum_range, criteria_range1, criteria1, [criteria_range2, criteria2])
-\`\`\`
-
-Example: Sum sales in column \`D\` where Region (column \`A\`) is "North" and Sales Rep (column \`B\`) is "Ahmed":
-\`\`\`excel
-=SUMIFS(D2:D500, A2:A500, "North", B2:B500, "Ahmed")
-\`\`\`
-
----
-
-## Practice Challenge for Bargisy eSchool Students
-
-Try setting up an Excel sheet with 5 sample columns:
-1. \`Transaction ID\`
-2. \`Product Name\`
-3. \`Category\`
-4. \`Unit Price\`
-5. \`Units Sold\`
-
-Add a formula to calculate \`Total Revenue\`, then use \`SUMIFS\` to find total revenue for your top product. Keep experimenting!`,
-    difficulty: "Beginner to Intermediate",
-    tags: "Excel, Formulas, XLOOKUP, Data Analysis, Office",
-    read_time: 7,
-    author: "Mohammed Bargisy",
-    status: "published",
-    views: 142,
-    cover_gradient: "linear-gradient(135deg, #059669, #10b981)",
-    updated_at: "2026-11-10 18:00:00"
-  },
-  {
-    id: 2,
-    title: "Creating Dynamic Financial Dashboards in Excel: Step-by-Step",
-    slug: "creating-dynamic-financial-dashboards-excel",
-    category: "excel",
-    category_name: "Excel & Spreadsheets",
-    summary: "[DRAFT] How to structure clean data tables, build PivotTables, connect interactive Slicers, and format executive-level KPI cards.",
-    content: `# Creating Dynamic Financial Dashboards in Excel (Work in Progress)
-
-*Author note: This guide is currently in draft status. Content is being polished before final publication.*
-
-## Overview
-A financial dashboard transforms raw transactional data into high-impact visual summaries for leadership. In this multi-part tutorial, we will build an automated monthly executive summary dashboard.
-
-## Phase 1: Data Normalization
-- Rule #1: Ensure each row is a single record.
-- Rule #2: Convert data range into an official Excel Table (\`Ctrl + T\`).
-- Rule #3: Ensure clear headers with no blank columns or merged cells.
-
-## Phase 2: Pivot Tables & Data Architecture
-- Inserting Pivot Tables on dedicated calculation tabs.
-- Aggregating revenue by month and category.
-- Calculating variance and Year-over-Year (YoY) growth.
-
-*(Sections on Slicer synchronization and conditional formatting charts to be written next...)*`,
-    difficulty: "Intermediate",
-    tags: "Excel, Dashboards, PivotTable, Slicers, Finance",
-    read_time: 4,
-    author: "Mohammed Bargisy",
-    status: "draft",
-    views: 0,
-    cover_gradient: "linear-gradient(135deg, #0d9488, #14b8a6)",
-    updated_at: "2026-11-10 19:15:00"
-  },
-  {
-    id: 3,
+    id: 101,
     title: "Python for Beginners: From Variables to Real-World Automation",
     slug: "python-for-beginners-variables-automation",
     category: "programming",
@@ -263,7 +120,7 @@ for item in target_dir.iterdir():
     updated_at: "2026-11-10 17:30:00"
   },
   {
-    id: 4,
+    id: 102,
     title: "Essential Computer Skills Every Professional Must Master in 2026",
     slug: "essential-computer-skills-every-professional-must-master",
     category: "computer_skills",
@@ -338,7 +195,7 @@ ipconfig /flushdns
     updated_at: "2026-11-10 16:45:00"
   },
   {
-    id: 5,
+    id: 103,
     title: "Modern Web Development 101: Understanding HTML, CSS, and JavaScript",
     slug: "modern-web-development-101-html-css-javascript",
     category: "programming",
@@ -403,7 +260,7 @@ btn.addEventListener('click', () => {
     updated_at: "2026-11-10 15:20:00"
   },
   {
-    id: 6,
+    id: 104,
     title: "Diagnosing Common PC Hardware & Network Problems: Field Guide",
     slug: "diagnosing-pc-hardware-network-problems",
     category: "computer_skills",
@@ -436,18 +293,37 @@ btn.addEventListener('click', () => {
 
 // --- 2. ARTICLE STORE (LOCALSTORAGE DATABASE) ---
 const ArticleStore = {
-  STORAGE_KEY: "bargisy_eschool_articles_v1",
+  STORAGE_KEY: "bargisy_eschool_articles_v2",
 
   init() {
-    if (!localStorage.getItem(this.STORAGE_KEY)) {
-      this.saveAll(DEFAULT_ARTICLES);
+    const excelLessons = (typeof window !== "undefined" && window.EXCEL_100_LESSONS) ? window.EXCEL_100_LESSONS : [];
+    const stored = localStorage.getItem(this.STORAGE_KEY);
+    
+    // Combine 100 Excel lessons with the programming and IT tracks
+    const allSeeds = [
+      ...excelLessons,
+      ...DEFAULT_ARTICLES
+    ];
+
+    if (!stored) {
+      this.saveAll(allSeeds);
+    } else {
+      try {
+        const parsed = JSON.parse(stored);
+        if (parsed.length < 50 && excelLessons.length > 0) {
+          this.saveAll(allSeeds);
+        }
+      } catch (e) {
+        this.saveAll(allSeeds);
+      }
     }
   },
 
   getAllRaw() {
     try {
       const data = localStorage.getItem(this.STORAGE_KEY);
-      return data ? JSON.parse(data) : DEFAULT_ARTICLES;
+      const excelLessons = (typeof window !== "undefined" && window.EXCEL_100_LESSONS) ? window.EXCEL_100_LESSONS : [];
+      return data ? JSON.parse(data) : [...excelLessons, ...DEFAULT_ARTICLES];
     } catch (e) {
       console.error("Error reading localStorage:", e);
       return DEFAULT_ARTICLES;
@@ -482,7 +358,16 @@ const ArticleStore = {
       );
     }
 
-    // Sort by updated_at descending
+    // When viewing Excel lessons, sort strictly in ascending lesson order (Lesson 01 to Lesson 100)
+    if (category === "excel") {
+      return list.sort((a, b) => {
+        const numA = parseInt((a.title.match(/Lesson\s+(\d+)/i) || [0, a.id])[1], 10) || a.id || 0;
+        const numB = parseInt((b.title.match(/Lesson\s+(\d+)/i) || [0, b.id])[1], 10) || b.id || 0;
+        return numA - numB;
+      });
+    }
+
+    // Default sort by updated_at descending
     return list.sort((a, b) => new Date(b.updated_at || 0) - new Date(a.updated_at || 0));
   },
 

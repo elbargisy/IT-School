@@ -193,7 +193,32 @@ const App = {
       return;
     }
 
-    grid.innerHTML = filtered.map(a => this.createArticleCardHtml(a)).join("");
+    let headerHtml = "";
+    if (this.currentCategory === "excel") {
+      headerHtml = `
+        <div class="col-span-full mb-2 p-6 rounded-3xl bg-gradient-to-r from-emerald-950 via-teal-900 to-slate-900 text-white shadow-xl border border-emerald-800/40">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div>
+              <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-bold uppercase tracking-wider mb-2">
+                <i class="fa-solid fa-graduation-cap"></i> Complete Curriculum: 100 Lessons
+              </div>
+              <h2 class="text-2xl sm:text-3xl font-black text-white">Excel Masterclass (Ordered 1 to 100)</h2>
+              <p class="text-xs sm:text-sm text-emerald-100/90 mt-1.5 max-w-3xl leading-relaxed">
+                Carefully ordered from the most simple fundamentals (Ribbon, Cell Referencing, AutoFill, Basic Math) up to complex functions (XLOOKUP, Dynamic Arrays, PivotTables, Power Query & VBA).
+              </p>
+            </div>
+            <div class="flex flex-wrap items-center gap-3">
+              <button onclick="App.navigateToArticle('lesson-01-introduction-to-excel-the-ribbon-interface')" class="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs transition shadow-lg shadow-emerald-500/25 flex items-center gap-2">
+                <span>Start Lesson 01</span>
+                <i class="fa-solid fa-arrow-right"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    grid.innerHTML = headerHtml + filtered.map(a => this.createArticleCardHtml(a)).join("");
   },
 
   createArticleCardHtml(a) {
@@ -302,6 +327,55 @@ const App = {
       parsedHtml = window.marked.parse(updatedA.content);
     } else {
       parsedHtml = `<pre>${updatedA.content}</pre>`;
+    }
+
+    // Check if it's an Excel lesson to render Next / Previous Lesson Navigation
+    const match = updatedA.title.match(/Lesson\s+(\d+)/i);
+    const lessonNum = match ? parseInt(match[1], 10) : (updatedA.category === 'excel' && typeof updatedA.id === 'number' && updatedA.id <= 100 ? updatedA.id : null);
+
+    if (updatedA.category === 'excel' && lessonNum) {
+      const excelLessons = ArticleStore.list({ category: 'excel' });
+      const prevLesson = excelLessons.find(x => {
+        const m = x.title.match(/Lesson\s+(\d+)/i);
+        const n = m ? parseInt(m[1], 10) : x.id;
+        return n === lessonNum - 1;
+      });
+      const nextLesson = excelLessons.find(x => {
+        const m = x.title.match(/Lesson\s+(\d+)/i);
+        const n = m ? parseInt(m[1], 10) : x.id;
+        return n === lessonNum + 1;
+      });
+
+      parsedHtml += `
+        <div class="mt-12 pt-8 border-t border-slate-200">
+          <div class="flex flex-col sm:flex-row items-center justify-between gap-4 bg-slate-50 p-6 rounded-2xl border border-slate-200">
+            <div>
+              ${prevLesson ? `
+                <button onclick="App.navigateToArticle('${prevLesson.slug}')" class="px-4 py-2.5 rounded-xl bg-white border border-slate-200 hover:bg-slate-100 text-slate-800 text-xs font-bold transition flex items-center gap-2 shadow-sm">
+                  <i class="fa-solid fa-arrow-left"></i>
+                  <span>Previous: Lesson ${String(lessonNum - 1).padStart(2, '0')}</span>
+                </button>
+              ` : `<span class="text-xs text-slate-400 font-semibold px-2">First Lesson</span>`}
+            </div>
+
+            <div class="text-center">
+              <span class="px-3.5 py-1.5 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold border border-emerald-200">
+                Lesson ${lessonNum} of 100
+              </span>
+              <div class="text-[11px] text-slate-500 mt-1">Excel Master Curriculum</div>
+            </div>
+
+            <div>
+              ${nextLesson ? `
+                <button onclick="App.navigateToArticle('${nextLesson.slug}')" class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition flex items-center gap-2 shadow-md shadow-emerald-500/20">
+                  <span>Next: Lesson ${String(lessonNum + 1).padStart(2, '0')}</span>
+                  <i class="fa-solid fa-arrow-right"></i>
+                </button>
+              ` : `<span class="text-xs text-emerald-600 font-bold px-2">🎉 Final Lesson Completed!</span>`}
+            </div>
+          </div>
+        </div>
+      `;
     }
 
     if (articleContainer) {

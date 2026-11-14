@@ -204,24 +204,29 @@
           </div>
 
           <!-- Track 2: Excel & Spreadsheets -->
-          <div class="p-8 rounded-3xl bg-white border border-slate-200 hover:border-emerald-400 hover:shadow-xl transition group flex flex-col justify-between">
+          <div class="p-8 rounded-3xl bg-white border border-slate-200 hover:border-emerald-400 hover:shadow-xl transition group flex flex-col justify-between relative overflow-hidden">
+            <div class="absolute top-4 right-4">
+              <span class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                100 Lessons
+              </span>
+            </div>
             <div>
               <div class="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition">
                 <i class="fa-solid fa-table-cells"></i>
               </div>
-              <h3 class="text-xl font-bold text-slate-900 mb-2">Excel & Data Analysis</h3>
+              <h3 class="text-xl font-bold text-slate-900 mb-2">Excel & Data Masterclass</h3>
               <p class="text-sm text-slate-600 leading-relaxed">
-                Master modern formulas (XLOOKUP, SUMIFS, INDEX-MATCH), dynamic PivotTables, executive KPI dashboards, and data cleaning.
+                A complete 100-lesson curriculum starting from the absolute basics (Interface, Cells, AutoFill, Math) in order up to advanced tools (XLOOKUP, Dynamic Arrays, PivotTables, Power Query & VBA).
               </p>
               <div class="flex flex-wrap gap-1.5 mt-4">
+                <span class="px-2 py-0.5 rounded text-xs bg-emerald-50 text-emerald-700 font-medium">100 Lessons in Order</span>
                 <span class="px-2 py-0.5 rounded text-xs bg-slate-100 text-slate-600">XLOOKUP</span>
-                <span class="px-2 py-0.5 rounded text-xs bg-slate-100 text-slate-600">Dashboards</span>
-                <span class="px-2 py-0.5 rounded text-xs bg-slate-100 text-slate-600">Formulas</span>
+                <span class="px-2 py-0.5 rounded text-xs bg-slate-100 text-slate-600">Power Query</span>
               </div>
             </div>
             <div class="mt-8 pt-4 border-t border-slate-100">
               <a href="#/excel" class="text-sm font-semibold text-emerald-600 flex items-center justify-between group-hover:translate-x-1 transition">
-                <span>Browse Excel Lessons</span>
+                <span>Start Lesson 01 (100 Lessons in Order)</span>
                 <i class="fa-solid fa-arrow-right"></i>
               </a>
             </div>
@@ -951,6 +956,7 @@ Click any Python snippet on the left to simulate execution...
 
   <!-- App Scripts -->
   <script src="js/interactive.js"></script>
+  <script src="js/excel-lessons.js"></script>
   <script src="js/editor.js"></script>
   <script src="js/app.js"></script>
 
