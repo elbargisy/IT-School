@@ -1,0 +1,959 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bargisy eSchool | Programming, Computer Skills & Excel Education</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <!-- Google Fonts: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  
+  <!-- Marked.js for Markdown parsing -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+  <!-- Custom Styles -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="min-h-screen flex flex-col bg-slate-50 text-slate-800 antialiased selection:bg-blue-500 selection:text-white">
+
+  <!-- Top Reading Progress Bar (active when reading an article) -->
+  <div id="readingProgressBar" class="fixed top-0 left-0 h-1 bg-gradient-to-r from-blue-600 to-emerald-500 z-50 transition-all duration-75 w-0"></div>
+
+  <!-- Global Toast Notifications -->
+  <div id="toastContainer" class="fixed bottom-6 right-6 z-50 flex flex-col gap-2 max-w-md"></div>
+
+  <!-- Top Navigation Bar -->
+  <header class="sticky top-0 z-40 nav-glass">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        
+        <!-- Brand Logo -->
+        <a href="#/" class="flex items-center gap-3 group">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-white shadow-md shadow-blue-500/20 group-hover:scale-105 transition">
+            <i class="fa-solid fa-graduation-cap text-lg"></i>
+          </div>
+          <div>
+            <span class="text-xl font-extrabold tracking-tight text-slate-900 group-hover:text-blue-600 transition">
+              Bargisy <span class="text-blue-600">eSchool</span>
+            </span>
+            <span class="block text-[10px] uppercase tracking-wider font-semibold text-slate-400">Code • IT • Excel</span>
+          </div>
+        </a>
+
+        <!-- Desktop Navigation Links -->
+        <nav class="hidden md:flex items-center gap-1">
+          <a href="#/" id="navHome" class="nav-link px-3.5 py-2 text-sm font-medium rounded-lg hover:text-blue-600 hover:bg-slate-100 transition">
+            Home
+          </a>
+          <a href="#/courses" id="navCourses" class="nav-link px-3.5 py-2 text-sm font-medium rounded-lg hover:text-blue-600 hover:bg-slate-100 transition">
+            All Lessons
+          </a>
+          <a href="#/programming" id="navProgramming" class="nav-link px-3.5 py-2 text-sm font-medium rounded-lg hover:text-blue-600 hover:bg-slate-100 transition">
+            <i class="fa-solid fa-code text-blue-500 mr-1"></i> Programming
+          </a>
+          <a href="#/computer-skills" id="navComputerSkills" class="nav-link px-3.5 py-2 text-sm font-medium rounded-lg hover:text-blue-600 hover:bg-slate-100 transition">
+            <i class="fa-solid fa-laptop text-purple-500 mr-1"></i> Computer Skills
+          </a>
+          <a href="#/excel" id="navExcel" class="nav-link px-3.5 py-2 text-sm font-medium rounded-lg hover:text-blue-600 hover:bg-slate-100 transition">
+            <i class="fa-solid fa-table text-emerald-500 mr-1"></i> Excel & Data
+          </a>
+          <a href="#/labs" id="navLabs" class="nav-link px-3.5 py-2 text-sm font-medium rounded-lg hover:text-blue-600 hover:bg-slate-100 transition">
+            <i class="fa-solid fa-flask text-amber-500 mr-1"></i> Interactive Labs
+          </a>
+        </nav>
+
+        <!-- Right Side: Author Studio Callout -->
+        <div class="flex items-center gap-3">
+          <a href="#/studio" id="navStudio" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-sm hover:from-blue-700 hover:to-indigo-700 transition">
+            <i class="fa-solid fa-feather-pointed"></i>
+            <span>Author Studio</span>
+            <span id="navDraftBadge" class="hidden px-2 py-0.5 text-xs font-bold rounded-full bg-amber-400 text-slate-950">
+              0 Drafts
+            </span>
+          </a>
+
+          <!-- Mobile Hamburger -->
+          <button onclick="document.getElementById('mobileMenu').classList.toggle('hidden')" class="md:hidden p-2 text-slate-600 hover:text-slate-900">
+            <i class="fa-solid fa-bars text-xl"></i>
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Mobile Navigation Drawer -->
+    <div id="mobileMenu" class="hidden md:hidden border-t border-slate-200 bg-white px-4 pt-2 pb-4 space-y-1">
+      <a href="#/" class="block px-3 py-2 rounded-md text-base font-medium text-slate-700 hover:bg-slate-100">Home</a>
+      <a href="#/courses" class="block px-3 py-2 rounded-md text-base font-medium text-slate-700 hover:bg-slate-100">All Lessons</a>
+      <a href="#/programming" class="block px-3 py-2 rounded-md text-base font-medium text-slate-700 hover:bg-slate-100">Programming</a>
+      <a href="#/computer-skills" class="block px-3 py-2 rounded-md text-base font-medium text-slate-700 hover:bg-slate-100">Computer Skills</a>
+      <a href="#/excel" class="block px-3 py-2 rounded-md text-base font-medium text-slate-700 hover:bg-slate-100">Excel & Spreadsheets</a>
+      <a href="#/labs" class="block px-3 py-2 rounded-md text-base font-medium text-slate-700 hover:bg-slate-100">Interactive Labs</a>
+      <a href="#/studio" class="block px-3 py-2 rounded-md text-base font-medium text-blue-600 font-bold hover:bg-blue-50">Author Studio</a>
+    </div>
+  </header>
+
+  <!-- MAIN APP CONTAINER -->
+  <main class="flex-1">
+
+    <!-- ================= VIEW 1: HOME ================= -->
+    <section id="viewHome">
+      <!-- Hero Section -->
+      <div class="hero-bg border-b border-slate-200 py-16 sm:py-24">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-xs font-semibold uppercase tracking-wider mb-6">
+            <i class="fa-solid fa-sparkles"></i> Welcome to Bargisy eSchool
+          </div>
+          
+          <h1 class="text-4xl sm:text-6xl font-black text-slate-900 tracking-tight max-w-4xl mx-auto leading-tight">
+            Master <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-emerald-500">Programming</span>, Computer Skills & <span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-teal-500">Excel</span>
+          </h1>
+
+          <p class="mt-6 text-lg sm:text-xl text-slate-600 max-w-2xl mx-auto font-normal">
+            Step-by-step practical guides, hands-on automation, real-world spreadsheet models, and vital IT knowledge created for ambitious professionals and students.
+          </p>
+
+          <!-- Search Bar in Hero -->
+          <div class="mt-8 max-w-xl mx-auto relative">
+            <div class="relative flex items-center">
+              <i class="fa-solid fa-magnifying-glass absolute left-4 text-slate-400"></i>
+              <input type="text" id="heroSearchInput" placeholder="Search Python scripts, XLOOKUP, Windows shortcuts..." 
+                     class="w-full pl-12 pr-28 py-3.5 rounded-2xl border border-slate-300 bg-white shadow-lg shadow-slate-200/50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-slate-800 text-sm">
+              <button onclick="window.location.hash='#/browse'" class="absolute right-2 px-4 py-2 rounded-xl bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700 transition">
+                Search
+              </button>
+            </div>
+            <p class="text-xs text-slate-400 mt-2">Popular: <span class="text-blue-600 cursor-pointer" onclick="App.setCategoryFilter('excel'); window.location.hash='#/browse';">XLOOKUP</span>, <span class="text-blue-600 cursor-pointer" onclick="App.setCategoryFilter('programming'); window.location.hash='#/browse';">Python Automation</span>, <span class="text-blue-600 cursor-pointer" onclick="App.setCategoryFilter('computer_skills'); window.location.hash='#/browse';">PC Diagnostics</span></p>
+          </div>
+
+          <!-- Quick Actions -->
+          <div class="mt-10 flex flex-wrap justify-center gap-4">
+            <a href="#/courses" class="px-6 py-3 rounded-xl font-semibold bg-slate-900 text-white hover:bg-slate-800 shadow-md transition">
+              Explore All Lessons
+            </a>
+            <a href="#/labs" class="px-6 py-3 rounded-xl font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition inline-flex items-center gap-2">
+              <i class="fa-solid fa-flask"></i> Interactive Excel Sandbox
+            </a>
+            <button onclick="EditorStudio.newArticle()" class="px-6 py-3 rounded-xl font-semibold bg-white text-blue-600 border border-slate-200 hover:bg-slate-50 shadow-sm transition inline-flex items-center gap-2">
+              <i class="fa-solid fa-pen-nib"></i> Write an Article
+            </button>
+          </div>
+
+          <!-- Stats Ribbon -->
+          <div class="mt-14 max-w-4xl mx-auto grid grid-cols-2 sm:grid-cols-4 gap-4 p-4 rounded-2xl bg-white/80 backdrop-blur border border-slate-200 shadow-sm">
+            <div class="p-3 text-center">
+              <div class="text-2xl sm:text-3xl font-extrabold text-blue-600">3</div>
+              <div class="text-xs font-medium text-slate-500 mt-0.5">Core Tracks</div>
+            </div>
+            <div class="p-3 text-center border-l border-slate-100">
+              <div class="text-2xl sm:text-3xl font-extrabold text-emerald-600">100%</div>
+              <div class="text-xs font-medium text-slate-500 mt-0.5">Practical Code & Sheets</div>
+            </div>
+            <div class="p-3 text-center border-l border-slate-100">
+              <div class="text-2xl sm:text-3xl font-extrabold text-purple-600">Live</div>
+              <div class="text-xs font-medium text-slate-500 mt-0.5">Interactive Sandbox</div>
+            </div>
+            <div class="p-3 text-center border-l border-slate-100">
+              <div class="text-2xl sm:text-3xl font-extrabold text-amber-500">Drafts</div>
+              <div class="text-xs font-medium text-slate-500 mt-0.5">Direct Author Workflow</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Core Tracks Overview Cards -->
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <div class="text-center max-w-2xl mx-auto mb-12">
+          <h2 class="text-3xl font-extrabold text-slate-900">Explore Learning Tracks</h2>
+          <p class="text-slate-500 mt-2">Focused curricula tailored for high-demand workplace and technical capabilities.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+          
+          <!-- Track 1: Programming -->
+          <div class="p-8 rounded-3xl bg-white border border-slate-200 hover:border-blue-400 hover:shadow-xl transition group flex flex-col justify-between">
+            <div>
+              <div class="w-14 h-14 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition">
+                <i class="fa-solid fa-code"></i>
+              </div>
+              <h3 class="text-xl font-bold text-slate-900 mb-2">Programming & Coding</h3>
+              <p class="text-sm text-slate-600 leading-relaxed">
+                Python automation, web development fundamentals (HTML/CSS/JS), backend APIs, logic building, and real-world project workflows.
+              </p>
+              <div class="flex flex-wrap gap-1.5 mt-4">
+                <span class="px-2 py-0.5 rounded text-xs bg-slate-100 text-slate-600">Python 3</span>
+                <span class="px-2 py-0.5 rounded text-xs bg-slate-100 text-slate-600">JavaScript</span>
+                <span class="px-2 py-0.5 rounded text-xs bg-slate-100 text-slate-600">APIs</span>
+              </div>
+            </div>
+            <div class="mt-8 pt-4 border-t border-slate-100">
+              <a href="#/programming" class="text-sm font-semibold text-blue-600 flex items-center justify-between group-hover:translate-x-1 transition">
+                <span>Browse Coding Lessons</span>
+                <i class="fa-solid fa-arrow-right"></i>
+              </a>
+            </div>
+          </div>
+
+          <!-- Track 2: Excel & Spreadsheets -->
+          <div class="p-8 rounded-3xl bg-white border border-slate-200 hover:border-emerald-400 hover:shadow-xl transition group flex flex-col justify-between">
+            <div>
+              <div class="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition">
+                <i class="fa-solid fa-table-cells"></i>
+              </div>
+              <h3 class="text-xl font-bold text-slate-900 mb-2">Excel & Data Analysis</h3>
+              <p class="text-sm text-slate-600 leading-relaxed">
+                Master modern formulas (XLOOKUP, SUMIFS, INDEX-MATCH), dynamic PivotTables, executive KPI dashboards, and data cleaning.
+              </p>
+              <div class="flex flex-wrap gap-1.5 mt-4">
+                <span class="px-2 py-0.5 rounded text-xs bg-slate-100 text-slate-600">XLOOKUP</span>
+                <span class="px-2 py-0.5 rounded text-xs bg-slate-100 text-slate-600">Dashboards</span>
+                <span class="px-2 py-0.5 rounded text-xs bg-slate-100 text-slate-600">Formulas</span>
+              </div>
+            </div>
+            <div class="mt-8 pt-4 border-t border-slate-100">
+              <a href="#/excel" class="text-sm font-semibold text-emerald-600 flex items-center justify-between group-hover:translate-x-1 transition">
+                <span>Browse Excel Lessons</span>
+                <i class="fa-solid fa-arrow-right"></i>
+              </a>
+            </div>
+          </div>
+
+          <!-- Track 3: Computer Skills -->
+          <div class="p-8 rounded-3xl bg-white border border-slate-200 hover:border-purple-400 hover:shadow-xl transition group flex flex-col justify-between">
+            <div>
+              <div class="w-14 h-14 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition">
+                <i class="fa-solid fa-laptop-medical"></i>
+              </div>
+              <h3 class="text-xl font-bold text-slate-900 mb-2">Computer & IT Skills</h3>
+              <p class="text-sm text-slate-600 leading-relaxed">
+                Operating systems mastery, PC hardware diagnostics, networking commands, troubleshooting slow computers, and cybersecurity essentials.
+              </p>
+              <div class="flex flex-wrap gap-1.5 mt-4">
+                <span class="px-2 py-0.5 rounded text-xs bg-slate-100 text-slate-600">Hardware</span>
+                <span class="px-2 py-0.5 rounded text-xs bg-slate-100 text-slate-600">Networking</span>
+                <span class="px-2 py-0.5 rounded text-xs bg-slate-100 text-slate-600">Security</span>
+              </div>
+            </div>
+            <div class="mt-8 pt-4 border-t border-slate-100">
+              <a href="#/computer-skills" class="text-sm font-semibold text-purple-600 flex items-center justify-between group-hover:translate-x-1 transition">
+                <span>Browse IT Skills</span>
+                <i class="fa-solid fa-arrow-right"></i>
+              </a>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Featured Published Lessons -->
+      <div class="bg-white border-y border-slate-200 py-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div class="flex flex-col sm:flex-row sm:items-end justify-between mb-10 gap-4">
+            <div>
+              <span class="text-xs font-bold text-blue-600 uppercase tracking-wider">Curated Articles</span>
+              <h2 class="text-3xl font-extrabold text-slate-900 mt-1">Featured Lessons & Tutorials</h2>
+            </div>
+            <a href="#/courses" class="text-sm font-semibold text-blue-600 hover:text-blue-800 flex items-center gap-1.5">
+              <span>View all lessons</span>
+              <i class="fa-solid fa-arrow-right text-xs"></i>
+            </a>
+          </div>
+
+          <div id="homeFeaturedGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Populated dynamically by App.renderHomeFeatured() -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Author Studio Banner Teaser -->
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <div class="rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 p-8 sm:p-12 text-white relative overflow-hidden shadow-2xl">
+          <div class="relative z-10 max-w-2xl">
+            <span class="px-3 py-1 rounded-full text-xs font-semibold bg-blue-500/20 text-blue-300 border border-blue-500/30 uppercase tracking-wider">
+              <i class="fa-solid fa-feather-pointed mr-1"></i> Built-in Article Creator
+            </span>
+            <h2 class="text-3xl font-extrabold mt-4 mb-3">Add Articles Directly & Save as Drafts</h2>
+            <p class="text-slate-300 text-sm sm:text-base leading-relaxed mb-6">
+              You can start writing articles immediately in the browser. Save work-in-progress drafts that stay private until you are completely satisfied, then hit <strong>Publish</strong> with one click to make them visible to learners!
+            </p>
+            <div class="flex flex-wrap gap-4">
+              <button onclick="EditorStudio.newArticle()" class="px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold text-sm transition shadow-lg shadow-blue-500/25 flex items-center gap-2">
+                <i class="fa-solid fa-plus"></i> Write a New Article
+              </button>
+              <a href="#/studio" class="px-6 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold text-sm transition border border-white/10 flex items-center gap-2">
+                <i class="fa-solid fa-folder-open"></i> Manage Drafts & Studio
+              </a>
+            </div>
+          </div>
+          <div class="absolute right-0 bottom-0 top-0 w-1/3 hidden lg:flex items-center justify-center opacity-10 text-9xl">
+            <i class="fa-solid fa-newspaper"></i>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ================= VIEW 2: BROWSE ALL LESSONS ================= -->
+    <section id="viewBrowse" class="hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <!-- Catalog Header -->
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+        <div>
+          <h1 class="text-3xl font-extrabold text-slate-900">Tutorial & Lesson Catalog</h1>
+          <p class="text-slate-500 text-sm mt-1">Explore all published guides from Bargisy eSchool.</p>
+        </div>
+        <div id="catalogResultsCount" class="text-xs font-semibold px-3 py-1.5 rounded-full bg-slate-200 text-slate-700 self-start md:self-auto">
+          Loading catalog...
+        </div>
+      </div>
+
+      <!-- Filters & Search Toolbar -->
+      <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm mb-8 flex flex-col sm:flex-row gap-4 items-center justify-between">
+        
+        <!-- Category Filter Tabs -->
+        <div class="flex flex-wrap gap-2 w-full sm:w-auto">
+          <button id="catBtn_all" onclick="App.setCategoryFilter('all')" class="cat-filter-btn px-4 py-2 rounded-xl text-xs font-bold bg-blue-600 text-white transition">
+            All Lessons
+          </button>
+          <button id="catBtn_programming" onclick="App.setCategoryFilter('programming')" class="cat-filter-btn px-4 py-2 rounded-xl text-xs font-medium bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 transition">
+            <i class="fa-solid fa-code text-blue-500 mr-1"></i> Programming
+          </button>
+          <button id="catBtn_excel" onclick="App.setCategoryFilter('excel')" class="cat-filter-btn px-4 py-2 rounded-xl text-xs font-medium bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 transition">
+            <i class="fa-solid fa-table-cells text-emerald-500 mr-1"></i> Excel & Data
+          </button>
+          <button id="catBtn_computer_skills" onclick="App.setCategoryFilter('computer_skills')" class="cat-filter-btn px-4 py-2 rounded-xl text-xs font-medium bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 transition">
+            <i class="fa-solid fa-laptop text-purple-500 mr-1"></i> Computer Skills
+          </button>
+        </div>
+
+        <!-- Search Input -->
+        <div class="relative w-full sm:w-72">
+          <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-slate-400 text-xs"></i>
+          <input type="text" id="mainSearchInput" placeholder="Filter by title or tag..." 
+                 class="w-full pl-9 pr-4 py-2 text-xs rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+
+      </div>
+
+      <!-- Articles Grid -->
+      <div id="catalogArticlesGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Injected dynamically by App.filterAndRenderArticles() -->
+      </div>
+    </section>
+
+
+    <!-- ================= VIEW 3: ARTICLE READER ================= -->
+    <section id="viewArticle" class="hidden max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+      
+      <!-- Back Navigation & Top Meta -->
+      <div class="flex items-center justify-between mb-8 pb-4 border-b border-slate-200">
+        <a href="#/courses" class="text-sm font-semibold text-slate-600 hover:text-blue-600 flex items-center gap-2">
+          <i class="fa-solid fa-arrow-left text-xs"></i>
+          <span>Back to All Lessons</span>
+        </a>
+        
+        <!-- Author Quick Edit Button -->
+        <button id="readerEditInStudioBtn" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-blue-50 text-blue-700 hover:bg-blue-100 transition flex items-center gap-1.5">
+          <i class="fa-solid fa-pen-to-square"></i> Edit this Article in Studio
+        </button>
+      </div>
+
+      <!-- Draft Status Alert (if viewing an unpublished draft) -->
+      <div id="readerDraftAlert" class="hidden mb-6 p-4 rounded-2xl bg-amber-50 border border-amber-300 text-amber-900 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <i class="fa-solid fa-triangle-exclamation text-amber-600 text-xl"></i>
+          <div>
+            <div class="font-bold text-sm">DRAFT PREVIEW MODE</div>
+            <div class="text-xs text-amber-700">This article is currently an unpublished draft. It is not listed in the public catalog until you hit Publish.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Article Header -->
+      <header class="mb-10">
+        <div class="flex flex-wrap items-center gap-2 mb-4">
+          <span id="readerMetaCategory" class="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-blue-100 text-blue-800">
+            Technology
+          </span>
+          <span id="readerMetaDifficulty" class="px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700">
+            Beginner
+          </span>
+        </div>
+
+        <h1 id="readerArticleTitle" class="text-3xl sm:text-5xl font-extrabold text-slate-900 tracking-tight leading-tight">
+          Lesson Title
+        </h1>
+
+        <!-- Author & Metric Details -->
+        <div class="mt-6 flex flex-wrap items-center gap-4 text-xs text-slate-500 pt-4 border-t border-slate-100">
+          <div class="flex items-center gap-2">
+            <div class="w-8 h-8 rounded-full bg-blue-600 text-white font-bold flex items-center justify-center text-xs">
+              MB
+            </div>
+            <div>
+              <div id="readerMetaAuthor" class="font-semibold text-slate-900">Mohammed Bargisy</div>
+              <div class="text-[11px] text-slate-400">Educator & Lead Author</div>
+            </div>
+          </div>
+          <span class="text-slate-300">•</span>
+          <div class="flex items-center gap-1.5">
+            <i class="fa-regular fa-clock"></i>
+            <span id="readerMetaTime">5 min read</span>
+          </div>
+          <span class="text-slate-300">•</span>
+          <div class="flex items-center gap-1.5">
+            <i class="fa-regular fa-eye"></i>
+            <span id="readerMetaViews">0 views</span>
+          </div>
+        </div>
+      </header>
+
+      <!-- Markdown Content Body -->
+      <article id="articleReaderContent" class="article-content bg-white p-6 sm:p-10 rounded-3xl border border-slate-200 shadow-sm mb-12">
+        <!-- Rendered markdown goes here -->
+      </article>
+
+      <!-- End of Article Card -->
+      <div class="p-8 rounded-3xl bg-slate-900 text-white flex flex-col sm:flex-row items-center justify-between gap-6">
+        <div>
+          <h3 class="text-xl font-bold">Enjoyed this Bargisy eSchool tutorial?</h3>
+          <p class="text-sm text-slate-400 mt-1">Explore our interactive labs or jump into the next lesson in this curriculum.</p>
+        </div>
+        <div class="flex items-center gap-3">
+          <a href="#/labs" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition">
+            Try Excel Labs
+          </a>
+          <a href="#/courses" class="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold transition">
+            More Lessons
+          </a>
+        </div>
+      </div>
+
+    </section>
+
+
+    <!-- ================= VIEW 4: AUTHOR STUDIO & CMS ================= -->
+    <section id="viewStudio" class="hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+      
+      <!-- Studio Header -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+        <div>
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-bold uppercase tracking-wider mb-2">
+            <i class="fa-solid fa-sliders"></i> Content Management System
+          </div>
+          <h1 class="text-3xl font-extrabold text-slate-900">Author Studio</h1>
+          <p class="text-slate-500 text-sm mt-0.5">Write new tutorials, keep them in Draft status until complete, and publish to the live site at any time.</p>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <button onclick="EditorStudio.exportBackup()" class="px-4 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition flex items-center gap-1.5 shadow-sm">
+            <i class="fa-solid fa-download"></i> Export Backup
+          </button>
+          
+          <button onclick="EditorStudio.newArticle()" class="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-500/20 transition flex items-center gap-2">
+            <i class="fa-solid fa-plus"></i> Write New Article
+          </button>
+        </div>
+      </div>
+
+      <!-- Studio Statistics KPI Ribbon -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div class="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm">
+          <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Articles</div>
+          <div id="studioStatTotal" class="text-3xl font-extrabold text-slate-900 mt-1">0</div>
+          <div class="text-[11px] text-slate-500 mt-1">Across all tracks</div>
+        </div>
+
+        <div class="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm border-l-4 border-l-emerald-500">
+          <div class="text-xs font-semibold text-emerald-600 uppercase tracking-wider">Live & Published</div>
+          <div id="studioStatPublished" class="text-3xl font-extrabold text-emerald-600 mt-1">0</div>
+          <div class="text-[11px] text-slate-500 mt-1">Publicly visible to students</div>
+        </div>
+
+        <div class="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm border-l-4 border-l-amber-500">
+          <div class="text-xs font-semibold text-amber-600 uppercase tracking-wider">Drafts (In Progress)</div>
+          <div id="studioStatDrafts" class="text-3xl font-extrabold text-amber-600 mt-1">0</div>
+          <div class="text-[11px] text-slate-500 mt-1">Saved until complete</div>
+        </div>
+
+        <div class="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm">
+          <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Student Reads</div>
+          <div id="studioStatViews" class="text-3xl font-extrabold text-blue-600 mt-1">0</div>
+          <div class="text-[11px] text-slate-500 mt-1">Total tutorial views</div>
+        </div>
+      </div>
+
+      <!-- Articles Management Table Card -->
+      <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+        
+        <!-- Table Filter Tabs -->
+        <div class="flex items-center justify-between border-b border-slate-200 px-6 pt-4">
+          <div class="flex gap-6">
+            <button id="tabFilter_all" onclick="EditorStudio.filterTable('all')" class="studio-filter-tab pb-4 text-sm border-b-2 border-blue-600 text-blue-600 font-bold transition">
+              All Articles
+            </button>
+            <button id="tabFilter_draft" onclick="EditorStudio.filterTable('draft')" class="studio-filter-tab pb-4 text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-800 transition">
+              Drafts Only <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 ml-1">Work In Progress</span>
+            </button>
+            <button id="tabFilter_published" onclick="EditorStudio.filterTable('published')" class="studio-filter-tab pb-4 text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-800 transition">
+              Published Only
+            </button>
+          </div>
+
+          <button onclick="EditorStudio.loadArticlesList(true)" class="text-xs text-slate-500 hover:text-blue-600 pb-4 flex items-center gap-1">
+            <i class="fa-solid fa-arrow-rotate-right"></i> Refresh
+          </button>
+        </div>
+
+        <!-- Table -->
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-slate-50 text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-200">
+                <th class="px-6 py-3.5">Title & Stats</th>
+                <th class="px-6 py-3.5">Category</th>
+                <th class="px-6 py-3.5">Status</th>
+                <th class="px-6 py-3.5">Author</th>
+                <th class="px-6 py-3.5 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="studioArticlesTableBody" class="divide-y divide-slate-100">
+              <!-- Rendered dynamically by EditorStudio.renderArticlesTable() -->
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- ================= VIEW 5: INTERACTIVE LABS ================= -->
+    <section id="viewLabs" class="hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+      
+      <!-- Lab Header -->
+      <div class="mb-10 text-center max-w-3xl mx-auto">
+        <span class="px-3.5 py-1.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-bold uppercase tracking-wider">
+          <i class="fa-solid fa-flask mr-1"></i> Interactive Student Sandbox
+        </span>
+        <h1 class="text-3xl sm:text-4xl font-extrabold text-slate-900 mt-3">Hands-on Practice Labs</h1>
+        <p class="text-slate-500 text-sm mt-2">Test Excel formulas against live datasets and run real Python snippets right inside your browser without installing anything.</p>
+      </div>
+
+      <!-- Lab 1: Interactive Excel Formula Sandbox -->
+      <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden mb-12">
+        <div class="p-6 bg-slate-900 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold">
+                <i class="fa-solid fa-table-cells"></i>
+              </span>
+              <h2 class="text-xl font-bold">Interactive Excel Formula Sandbox</h2>
+            </div>
+            <p class="text-xs text-slate-400 mt-1">Live Inventory Dataset (Table <code>Products</code>, Rows 2 to 6)</p>
+          </div>
+          <div class="text-xs text-emerald-400 bg-emerald-950/80 px-3 py-1.5 rounded-lg border border-emerald-800">
+            <i class="fa-solid fa-circle-check"></i> Formula Engine Active
+          </div>
+        </div>
+
+        <div class="p-6">
+          <!-- Sample Table -->
+          <div class="overflow-x-auto border border-slate-200 rounded-xl mb-6">
+            <table class="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr class="bg-slate-100 text-slate-600 font-bold border-b border-slate-200">
+                  <th class="px-3 py-2.5 text-center text-slate-400 w-12 bg-slate-200/50">#</th>
+                  <th class="px-3 py-2.5">A: Product ID</th>
+                  <th class="px-3 py-2.5">B: Product Name</th>
+                  <th class="px-3 py-2.5">C: Category</th>
+                  <th class="px-3 py-2.5 text-right">D: Unit Price</th>
+                  <th class="px-3 py-2.5 text-right">E: Qty in Stock</th>
+                  <th class="px-3 py-2.5 text-right">F: Total Value</th>
+                </tr>
+              </thead>
+              <tbody id="excelTableBody" class="divide-y divide-slate-100">
+                <!-- Rendered dynamically by InteractiveLab.renderExcelPlayground() -->
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Interactive Formula Bar -->
+          <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200">
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+              Formula Input Bar (Type any Excel formula or click sample presets):
+            </label>
+            <div class="flex flex-col sm:flex-row gap-2">
+              <div class="relative flex-1">
+                <span class="absolute left-3 top-2.5 font-mono font-bold text-emerald-600 text-sm">fx</span>
+                <input type="text" id="excelFormulaInput" value="=SUM(E2:E6)" 
+                       class="w-full pl-9 pr-4 py-2 font-mono text-sm rounded-xl border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+              </div>
+              <button onclick="InteractiveLab.evaluateExcelFormula(document.getElementById('excelFormulaInput').value)" 
+                      class="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs transition">
+                Evaluate Formula
+              </button>
+            </div>
+
+            <!-- Preset Formula Quick Buttons -->
+            <div class="mt-3 flex flex-wrap items-center gap-1.5 text-xs">
+              <span class="text-slate-400 font-medium mr-1">Quick Presets:</span>
+              <button onclick="InteractiveLab.loadFormulaSample('=SUM(E2:E6)')" class="px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 transition font-mono text-[11px]">
+                =SUM(E2:E6)
+              </button>
+              <button onclick="InteractiveLab.loadFormulaSample('=SUM(F2:F6)')" class="px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 transition font-mono text-[11px]">
+                =SUM(F2:F6) [Total Revenue]
+              </button>
+              <button onclick="InteractiveLab.loadFormulaSample('=AVERAGE(D2:D6)')" class="px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 transition font-mono text-[11px]">
+                =AVERAGE(D2:D6)
+              </button>
+              <button onclick="InteractiveLab.loadFormulaSample('=MAX(D2:D6)')" class="px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 transition font-mono text-[11px]">
+                =MAX(D2:D6)
+              </button>
+              <button onclick="InteractiveLab.loadFormulaSample('=XLOOKUP(&quot;P-102&quot;, A2:A6, B2:B6)')" class="px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 transition font-mono text-[11px]">
+                =XLOOKUP("P-102", A2:A6, B2:B6)
+              </button>
+              <button onclick="InteractiveLab.loadFormulaSample('=IF(E2 > 50, &quot;Bulk Stock&quot;, &quot;Low Stock&quot;)')" class="px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 transition font-mono text-[11px]">
+                =IF(E2 > 50, "Bulk", "Low")
+              </button>
+            </div>
+
+            <!-- Formula Output Display -->
+            <div class="mt-4 p-4 rounded-xl bg-white border border-emerald-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <span class="text-xs font-semibold text-slate-400">Calculated Cell Value:</span>
+                <div id="excelFormulaResult" class="text-2xl font-black text-emerald-600 font-mono mt-0.5">305</div>
+              </div>
+              <div class="sm:text-right">
+                <span class="text-xs font-semibold text-slate-400">Formula Explanation:</span>
+                <p id="excelFormulaExplanation" class="text-xs text-slate-600 mt-0.5">Calculated sum of total units across all 5 inventory items.</p>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- Lab 2: Interactive Python Console Playground -->
+      <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="p-6 bg-slate-900 text-white flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="w-8 h-8 rounded-lg bg-blue-500/20 text-blue-400 flex items-center justify-center font-bold">
+              <i class="fa-solid fa-terminal"></i>
+            </span>
+            <h2 class="text-xl font-bold">Python Code Runner Simulator</h2>
+          </div>
+          <span class="text-xs font-mono text-slate-400">Python 3.13 Runtime</span>
+        </div>
+
+        <div class="p-6">
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Code Presets -->
+            <div>
+              <div class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Select a Python Snippet to Execute:</div>
+              <div class="space-y-2">
+                <button onclick="InteractiveLab.runPythonDemo('variables')" class="w-full text-left p-3 rounded-xl border border-slate-200 hover:border-blue-500 hover:bg-blue-50/50 transition">
+                  <div class="font-semibold text-sm text-slate-900">1. Student Record & Variables</div>
+                  <div class="text-xs text-slate-500">Formatting student enrollments, completion rates, and status.</div>
+                </button>
+
+                <button onclick="InteractiveLab.runPythonDemo('loop')" class="w-full text-left p-3 rounded-xl border border-slate-200 hover:border-blue-500 hover:bg-blue-50/50 transition">
+                  <div class="font-semibold text-sm text-slate-900">2. Loops & Assignment Grading</div>
+                  <div class="text-xs text-slate-500">Iterating across submissions and calculating average grade.</div>
+                </button>
+
+                <button onclick="InteractiveLab.runPythonDemo('automation')" class="w-full text-left p-3 rounded-xl border border-slate-200 hover:border-blue-500 hover:bg-blue-50/50 transition">
+                  <div class="font-semibold text-sm text-slate-900">3. Desktop File Automation Script</div>
+                  <div class="text-xs text-slate-500">Simulating automated classification of downloaded files.</div>
+                </button>
+              </div>
+            </div>
+
+            <!-- Terminal Output Box -->
+            <div>
+              <div class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Terminal Output Console:</div>
+              <pre id="pythonConsoleOutput" class="bg-slate-950 text-slate-200 p-4 rounded-xl text-xs font-mono min-h-[160px] overflow-auto border border-slate-800">
+Click any Python snippet on the left to simulate execution...
+              </pre>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+
+  <!-- ================= ARTICLE WRITER & EDITOR MODAL ================= -->
+  <!-- This is the core requirement allowing Mohammed Bargisy to add articles directly as drafts until published -->
+  <div id="editorModal" class="hidden fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4">
+    <div class="bg-white w-full max-w-6xl max-h-[94vh] rounded-3xl shadow-2xl flex flex-col overflow-hidden border border-slate-200">
+      
+      <!-- Editor Modal Top Bar -->
+      <div class="px-6 py-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center">
+            <i class="fa-solid fa-pen-nib"></i>
+          </div>
+          <div>
+            <h2 id="editorModalTitle" class="text-lg font-bold text-slate-900">Write New Article</h2>
+            <div id="autosaveIndicator" class="text-xs text-slate-400">
+              <i class="fa-regular fa-clock"></i> Changes are auto-saved to Draft
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <!-- View Toggle Buttons -->
+          <div class="hidden sm:flex items-center bg-slate-200 p-1 rounded-xl text-xs">
+            <button id="btnMode_edit" onclick="EditorStudio.setEditorLayout('edit')" class="editor-view-toggle px-3 py-1 rounded-lg transition font-medium">
+              Edit
+            </button>
+            <button id="btnMode_split" onclick="EditorStudio.setEditorLayout('split')" class="editor-view-toggle px-3 py-1 rounded-lg bg-blue-600 text-white transition font-medium">
+              Split View
+            </button>
+            <button id="btnMode_preview" onclick="EditorStudio.setEditorLayout('preview')" class="editor-view-toggle px-3 py-1 rounded-lg transition font-medium">
+              Preview
+            </button>
+          </div>
+
+          <button onclick="EditorStudio.closeEditorModal()" class="p-2 text-slate-400 hover:text-slate-700 transition" title="Close">
+            <i class="fa-solid fa-xmark text-lg"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Editor Content Body (Scrollable) -->
+      <div class="flex-1 overflow-y-auto p-6 space-y-6">
+        <input type="hidden" id="editorArticleId" value="">
+        <input type="hidden" id="editorCurrentStatus" value="draft">
+
+        <!-- Title & Category Row -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="md:col-span-2">
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+              Article Title *
+            </label>
+            <input type="text" id="articleTitleInput" placeholder="e.g. Complete Guide to XLOOKUP and Dynamic Arrays in Excel" 
+                   class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 font-semibold text-slate-900 text-sm">
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+              Subject Category *
+            </label>
+            <select id="articleCategoryInput" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white font-medium">
+              <option value="programming">💻 Programming & Code</option>
+              <option value="excel">📊 Excel & Spreadsheets</option>
+              <option value="computer_skills">🖥️ Computer & IT Skills</option>
+              <option value="general">🎓 General Tech & Productivity</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Summary & Metadata Row -->
+        <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
+          <div class="sm:col-span-2">
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+              Short Summary / Excerpt (Displayed on card)
+            </label>
+            <input type="text" id="articleSummaryInput" placeholder="A concise 1-2 sentence overview of what students will master..." 
+                   class="w-full px-4 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs">
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+              Difficulty Level
+            </label>
+            <select id="articleDifficultyInput" class="w-full px-3 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs bg-white">
+              <option value="Beginner">Beginner</option>
+              <option value="Beginner to Intermediate">Beginner to Intermediate</option>
+              <option value="Intermediate">Intermediate</option>
+              <option value="Advanced">Advanced</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+              Read Time (min)
+            </label>
+            <input type="number" id="articleReadTimeInput" value="5" min="1" max="60" 
+                   class="w-full px-4 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+              Tags (Comma separated)
+            </label>
+            <input type="text" id="articleTagsInput" placeholder="e.g. Excel, XLOOKUP, PivotTable, Office" 
+                   class="w-full px-4 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+              Author Name
+            </label>
+            <input type="text" id="articleAuthorInput" value="Mohammed Bargisy" 
+                   class="w-full px-4 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs">
+          </div>
+        </div>
+
+        <!-- Markdown Formatting Helpers Toolbar -->
+        <div class="p-2.5 rounded-xl bg-slate-100 border border-slate-200 flex flex-wrap items-center gap-1.5 text-xs">
+          <span class="text-slate-400 font-bold px-1 text-[11px] uppercase">Format:</span>
+          
+          <button onclick="EditorStudio.insertMarkdown('**', '**')" class="px-2 py-1 rounded hover:bg-white text-slate-700 font-bold" title="Bold">
+            B
+          </button>
+          <button onclick="EditorStudio.insertMarkdown('*', '*')" class="px-2 py-1 rounded hover:bg-white text-slate-700 italic" title="Italic">
+            I
+          </button>
+          <button onclick="EditorStudio.insertMarkdown('## ', '')" class="px-2 py-1 rounded hover:bg-white text-slate-700 font-semibold" title="Heading 2">
+            H2
+          </button>
+          <button onclick="EditorStudio.insertMarkdown('### ', '')" class="px-2 py-1 rounded hover:bg-white text-slate-700 font-semibold" title="Heading 3">
+            H3
+          </button>
+          <button onclick="EditorStudio.insertMarkdown('`', '`')" class="px-2 py-1 rounded hover:bg-white text-slate-700 font-mono" title="Inline Code">
+            &lt;/&gt;
+          </button>
+          <button onclick="EditorStudio.insertMarkdown('- ', '')" class="px-2 py-1 rounded hover:bg-white text-slate-700" title="Bullet List">
+            <i class="fa-solid fa-list-ul"></i>
+          </button>
+          <button onclick="EditorStudio.insertMarkdown('1. ', '')" class="px-2 py-1 rounded hover:bg-white text-slate-700" title="Numbered List">
+            <i class="fa-solid fa-list-ol"></i>
+          </button>
+
+          <span class="h-4 w-px bg-slate-300 mx-1"></span>
+
+          <!-- Educational & Technical Pre-made Blocks -->
+          <button onclick="EditorStudio.insertTemplate('code')" class="px-2.5 py-1 rounded bg-white hover:bg-blue-50 text-blue-700 border border-slate-200 font-medium" title="Insert Code Block">
+            <i class="fa-brands fa-python mr-1"></i> + Code Block
+          </button>
+          <button onclick="EditorStudio.insertTemplate('excel')" class="px-2.5 py-1 rounded bg-white hover:bg-emerald-50 text-emerald-700 border border-slate-200 font-medium" title="Insert Excel Formula Box">
+            <i class="fa-solid fa-table-cells mr-1"></i> + Excel Formula
+          </button>
+          <button onclick="EditorStudio.insertTemplate('tip')" class="px-2.5 py-1 rounded bg-white hover:bg-emerald-50 text-emerald-800 border border-slate-200 font-medium" title="Insert Pro Tip Box">
+            💡 + Tip Box
+          </button>
+          <button onclick="EditorStudio.insertTemplate('warning')" class="px-2.5 py-1 rounded bg-white hover:bg-amber-50 text-amber-800 border border-slate-200 font-medium" title="Insert Warning Box">
+            ⚠️ + Warning
+          </button>
+          <button onclick="EditorStudio.insertTemplate('table')" class="px-2.5 py-1 rounded bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 font-medium" title="Insert Table">
+            <i class="fa-solid fa-table mr-1"></i> + Table
+          </button>
+
+          <div class="ml-auto text-slate-400 text-[11px]" id="editorWordCount">
+            0 words
+          </div>
+        </div>
+
+        <!-- Editor & Live Preview Workspace Container -->
+        <div class="flex flex-col lg:flex-row gap-4">
+          
+          <!-- Textarea Left/Main Container -->
+          <div id="editorTextContainer" class="w-full lg:w-1/2 flex flex-col">
+            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1 flex items-center justify-between">
+              <span>Markdown Content Editor</span>
+              <span class="text-slate-400 font-normal">Supports GitHub Flavored Markdown</span>
+            </label>
+            <textarea id="articleContentInput" 
+                      class="editor-pane w-full p-4 rounded-2xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800 resize-y" 
+                      placeholder="Start drafting your tutorial here..."></textarea>
+          </div>
+
+          <!-- Live Preview Right Container -->
+          <div id="editorPreviewContainer" class="w-full lg:w-1/2 flex flex-col">
+            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">
+              Live Preview (What students will see)
+            </label>
+            <div id="editorLivePreview" class="preview-pane p-6 rounded-2xl border border-slate-200 bg-white">
+              <!-- Live preview rendered here -->
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- Editor Modal Sticky Footer -->
+      <div class="px-6 py-4 border-t border-slate-200 bg-slate-50 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div class="text-xs text-slate-500 flex items-center gap-2">
+          <i class="fa-solid fa-shield-halved text-blue-500"></i>
+          <span>Save as <strong>Draft</strong> to keep editing privately. When 100% ready, click <strong>Publish</strong>.</span>
+        </div>
+
+        <div class="flex items-center gap-3 w-full sm:w-auto">
+          <button onclick="EditorStudio.closeEditorModal()" class="px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-200 transition">
+            Cancel
+          </button>
+
+          <!-- 1. Save as Draft Button -->
+          <button id="btnSaveDraft" onclick="EditorStudio.saveAsDraft()" class="px-5 py-2.5 rounded-xl border border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-900 text-xs font-bold transition flex items-center gap-2">
+            <i class="fa-solid fa-floppy-disk"></i>
+            <span>Save as Draft (Work in Progress)</span>
+          </button>
+
+          <!-- 2. Publish Directly Button -->
+          <button id="btnPublishNow" onclick="EditorStudio.publishArticle()" class="px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-500/20 transition flex items-center gap-2">
+            <i class="fa-solid fa-rocket"></i>
+            <span id="publishBtnText">Publish to Website</span>
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- Global Footer -->
+  <footer class="bg-white border-t border-slate-200 py-12 mt-16">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex flex-col md:flex-row items-center justify-between gap-6">
+        
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white text-sm">
+            <i class="fa-solid fa-graduation-cap"></i>
+          </div>
+          <div>
+            <span class="font-extrabold text-slate-900">Bargisy eSchool</span>
+            <span class="text-xs text-slate-400 block">Founded by Mohammed Bargisy</span>
+          </div>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-6 text-xs text-slate-500 font-medium">
+          <a href="#/" class="hover:text-blue-600">Home</a>
+          <a href="#/courses" class="hover:text-blue-600">All Lessons</a>
+          <a href="#/programming" class="hover:text-blue-600">Programming</a>
+          <a href="#/excel" class="hover:text-blue-600">Excel</a>
+          <a href="#/computer-skills" class="hover:text-blue-600">Computer Skills</a>
+          <a href="#/labs" class="hover:text-blue-600">Interactive Labs</a>
+          <a href="#/studio" class="hover:text-blue-600 font-bold text-blue-600">Author Studio</a>
+        </div>
+
+        <div class="text-xs text-slate-400">
+          © 2026 Bargisy eSchool. Empowering minds with technology.
+        </div>
+
+      </div>
+    </div>
+  </footer>
+
+  <!-- App Scripts -->
+  <script src="js/interactive.js"></script>
+  <script src="js/editor.js"></script>
+  <script src="js/app.js"></script>
+
+</body>
+</html>
+
