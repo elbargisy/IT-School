@@ -16,8 +16,8 @@ const App = {
     if (typeof ArticleStore !== 'undefined' && ArticleStore.init) {
       ArticleStore.init();
     }
-    this.handleRouting();
-    window.addEventListener("hashchange", () => this.handleRouting());
+    // Initialise the studio and the sandboxes BEFORE routing, so a direct link
+    // like #/labs/web finds the editors already filled with a starter project.
     if (typeof EditorStudio !== 'undefined' && EditorStudio.init) {
       EditorStudio.init();
     }
@@ -25,20 +25,56 @@ const App = {
       InteractiveLab.init();
     }
     this.loadCatalog();
+    this.handleRouting();
+    window.addEventListener("hashchange", () => this.handleRouting());
   },
 
   initMarkdown() {
-    if (window.marked) {
-      window.marked.setOptions({
+    if (window.marked && typeof window.marked.use === "function") {
+      const esc = (t) => App.escapeHtml(t);
+      window.marked.use({
         gfm: true,
         breaks: true,
-        headerIds: true,
-        mangle: false,
-        highlight: function(code) {
-          return code;
+        renderer: {
+          // Lessons talk about tags like <style>, <script>, <article>.
+          // Show them as text instead of letting the browser create real elements.
+          html(token) {
+            const raw = typeof token === "string" ? token : (token.raw != null ? token.raw : token.text);
+            return esc(raw);
+          }
         }
       });
     }
+  },
+
+  escapeHtml(str) {
+    return String(str == null ? "" : str)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  },
+
+  // Safe for use inside onclick="...('X')" attributes
+  escapeAttrJs(str) {
+    return String(str == null ? "" : str).replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/"/g, "&quot;");
+  },
+
+  runHeroSearch() {
+    const heroSearch = document.getElementById("heroSearchInput");
+    const val = heroSearch ? heroSearch.value.trim() : "";
+    this.currentCategory = "all";
+    this.currentTrack = "all";
+    window.location.hash = "#/browse";
+    setTimeout(() => {
+      const bSearch = document.getElementById("mainSearchInput");
+      if (bSearch) {
+        bSearch.value = val;
+        this.currentSearch = val;
+        this.filterAndRenderArticles();
+      }
+    }, 100);
   },
 
   bindGlobalEvents() {
@@ -54,18 +90,7 @@ const App = {
     if (heroSearch) {
       heroSearch.addEventListener("keydown", (e) => {
         if (e.key === "Enter") {
-          const val = heroSearch.value.trim();
-          if (val) {
-            window.location.hash = "#/browse";
-            setTimeout(() => {
-              const bSearch = document.getElementById("mainSearchInput");
-              if (bSearch) {
-                bSearch.value = val;
-                this.currentSearch = val;
-                this.filterAndRenderArticles();
-              }
-            }, 100);
-          }
+          this.runHeroSearch();
         }
       });
     }
@@ -98,6 +123,10 @@ const App = {
     });
 
     window.scrollTo({ top: 0, behavior: "smooth" });
+
+    // Close the mobile menu after navigating
+    const mobileMenu = document.getElementById("mobileMenu");
+    if (mobileMenu) mobileMenu.classList.add("hidden");
 
     if (hash === "#/" || hash === "" || hash === "#home") {
       this.showView("viewHome");
@@ -306,17 +335,17 @@ const App = {
     else if (a.track === 'python') badgeColor = "bg-blue-50 text-blue-700 border-blue-200";
 
     return `
-      <div onclick="App.navigateToArticle('${a.slug}')" class="p-3 rounded-2xl bg-white hover:bg-blue-50/50 border border-slate-200 hover:border-blue-400 transition cursor-pointer flex items-center justify-between group shadow-2xs">
+      <div onclick="App.navigateToArticle('${this.escapeAttrJs(a.slug)}')" class="p-3 rounded-2xl bg-white hover:bg-blue-50/50 border border-slate-200 hover:border-blue-400 transition cursor-pointer flex items-center justify-between group shadow-2xs">
         <div class="flex items-center gap-3 flex-1 min-w-0 pr-2">
           <span class="px-2.5 py-1 rounded-lg text-xs font-mono font-extrabold border ${badgeColor} shrink-0">
             #${numStr}
           </span>
           <div class="min-w-0 flex-1">
-            <h4 class="text-xs font-bold text-slate-800 group-hover:text-blue-600 transition truncate">
-              ${a.title}
+            <h4 class="text-xs font-bold text-slate-800 group-hover:text-blue-600 transition truncate" title="${this.escapeHtml(a.title)}">
+              ${this.escapeHtml(a.title)}
             </h4>
             <p class="text-[11px] text-slate-500 truncate mt-0.5">
-              ${a.summary || "Practical code tutorial and hands-on challenge."}
+              ${this.escapeHtml(a.summary || "Practical code tutorial and hands-on challenge.")}
             </p>
           </div>
         </div>
@@ -764,8 +793,8 @@ const App = {
     }
 
     return `
-      <div class="course-card bg-white rounded-2xl overflow-hidden flex flex-col group cursor-pointer" onclick="App.navigateToArticle('${a.slug}')">
-        <div class="h-3 relative" style="background: ${a.cover_gradient};"></div>
+      <div class="course-card bg-white rounded-2xl overflow-hidden flex flex-col group cursor-pointer" onclick="App.navigateToArticle('${this.escapeAttrJs(a.slug)}')">
+        <div class="h-3 relative" style="background: ${this.escapeHtml(a.cover_gradient || "linear-gradient(135deg, #1d4ed8, #3b82f6)")};"></div>
         <div class="p-6 flex-1 flex flex-col">
           <div class="flex items-center justify-between mb-3">
             <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold border ${badgeClass}">
@@ -777,11 +806,11 @@ const App = {
           </div>
 
           <h3 class="text-lg font-bold text-slate-900 group-hover:text-blue-600 transition line-clamp-2 mb-2">
-            ${a.title}
+            ${this.escapeHtml(a.title)}
           </h3>
 
           <p class="text-sm text-slate-600 line-clamp-2 mb-4 flex-1">
-            ${a.summary || "Comprehensive tutorial and hands-on guide from Bargisy eSchool."}
+            ${this.escapeHtml(a.summary || "Comprehensive tutorial and hands-on guide from Bargisy eSchool.")}
           </p>
 
           <div class="pt-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
@@ -789,7 +818,7 @@ const App = {
               <div class="w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-[10px]">
                 MB
               </div>
-              <span class="font-medium text-slate-700">${a.author || "Mohammed Bargisy"}</span>
+              <span class="font-medium text-slate-700">${this.escapeHtml(a.author || "Mohammed Bargisy")}</span>
             </div>
             <span class="font-semibold text-blue-600 group-hover:translate-x-1 transition inline-flex items-center gap-1">
               Read Lesson <i class="fa-solid fa-arrow-right text-[10px]"></i>
@@ -860,7 +889,7 @@ const App = {
     if (window.marked) {
       parsedHtml = window.marked.parse(updatedA.content);
     } else {
-      parsedHtml = `<pre>${updatedA.content}</pre>`;
+      parsedHtml = `<pre>${this.escapeHtml(updatedA.content)}</pre>`;
     }
 
     // Sequential Navigation for all Curricula (Excel, Python, HTML, CSS, JavaScript, IT Skills)
@@ -943,7 +972,7 @@ const App = {
           <div class="flex flex-col sm:flex-row items-center justify-between gap-4 bg-slate-50 p-6 rounded-2xl border border-slate-200">
             <div>
               ${prevLesson ? `
-                <button onclick="App.navigateToArticle('${prevLesson.slug}')" class="px-4 py-2.5 rounded-xl bg-white border border-slate-200 hover:bg-slate-100 text-slate-800 text-xs font-bold transition flex items-center gap-2 shadow-sm">
+                <button onclick="App.navigateToArticle('${this.escapeAttrJs(prevLesson.slug)}')" class="px-4 py-2.5 rounded-xl bg-white border border-slate-200 hover:bg-slate-100 text-slate-800 text-xs font-bold transition flex items-center gap-2 shadow-sm">
                   <i class="fa-solid fa-arrow-left"></i>
                   <span>Previous: Lesson ${String(lessonNum - 1).padStart(2, '0')}</span>
                 </button>
@@ -962,7 +991,7 @@ const App = {
 
             <div>
               ${nextLesson ? `
-                <button onclick="App.navigateToArticle('${nextLesson.slug}')" class="px-4 py-2.5 rounded-xl ${trackInfo.colorClass} text-white text-xs font-bold transition flex items-center gap-2 shadow-md">
+                <button onclick="App.navigateToArticle('${this.escapeAttrJs(nextLesson.slug)}')" class="px-4 py-2.5 rounded-xl ${trackInfo.colorClass} text-white text-xs font-bold transition flex items-center gap-2 shadow-md">
                   <span>Next: Lesson ${String(lessonNum + 1).padStart(2, '0')}</span>
                   <i class="fa-solid fa-arrow-right"></i>
                 </button>
@@ -980,6 +1009,23 @@ const App = {
   },
 
   enhanceArticleContent(container) {
+    // Turn "> [!TIP]" / "> [!WARNING]" blockquotes into styled callouts
+    container.querySelectorAll("blockquote").forEach(bq => {
+      const first = bq.querySelector("p");
+      if (!first) return;
+      const m = first.innerHTML.match(/^\s*\[!(TIP|NOTE|IMPORTANT|WARNING|CAUTION)\]\s*(<br\s*\/?>)?\s*/i);
+      if (!m) return;
+      const kind = m[1].toUpperCase();
+      first.innerHTML = first.innerHTML.slice(m[0].length);
+      const cls = (kind === "WARNING" || kind === "CAUTION") ? "alert-warning" : "alert-tip";
+      const icon = (kind === "WARNING" || kind === "CAUTION") ? "fa-triangle-exclamation" : "fa-lightbulb";
+      const label = kind.charAt(0) + kind.slice(1).toLowerCase();
+      const div = document.createElement("div");
+      div.className = cls;
+      div.innerHTML = `<div class="alert-title"><i class="fa-solid ${icon}"></i> ${label}</div>` + bq.innerHTML;
+      bq.replaceWith(div);
+    });
+
     container.querySelectorAll("pre").forEach(pre => {
       const wrapper = document.createElement("div");
       wrapper.className = "relative group";
@@ -991,6 +1037,22 @@ const App = {
       copyBtn.innerHTML = `<i class="fa-regular fa-copy mr-1"></i> Copy`;
       copyBtn.onclick = () => this.copyCode(copyBtn);
       wrapper.appendChild(copyBtn);
+
+      // "Try it" button for languages the sandbox can run
+      const codeEl = pre.querySelector("code");
+      const langMatch = codeEl && (codeEl.className || "").match(/language-(\w+)/);
+      const lang = langMatch ? langMatch[1].toLowerCase() : "";
+      const runnable = ["html", "css", "javascript", "js", "python", "py"];
+      if (runnable.includes(lang)) {
+        const label = { html: "HTML", css: "CSS", javascript: "JavaScript", js: "JavaScript", python: "Python", py: "Python" }[lang];
+        const tryBtn = document.createElement("button");
+        tryBtn.className = "try-sandbox-btn";
+        tryBtn.innerHTML = `<i class="fa-solid fa-play"></i> Try this ${label} in the Sandbox`;
+        tryBtn.onclick = () => {
+          if (typeof InteractiveLab !== "undefined") InteractiveLab.openInSandbox(lang, codeEl.textContent);
+        };
+        wrapper.appendChild(tryBtn);
+      }
     });
   },
 

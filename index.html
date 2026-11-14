@@ -17,7 +17,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   
   <!-- Marked.js for Markdown parsing -->
-  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked@18.2.0/lib/marked.umd.js"></script>
 
   <!-- Skulpt In-Browser Python Runtime -->
   <script src="https://cdn.jsdelivr.net/npm/skulpt@1.2.0/dist/skulpt.min.js"></script>
@@ -131,7 +131,7 @@
               <i class="fa-solid fa-magnifying-glass absolute left-4 text-slate-400"></i>
               <input type="text" id="heroSearchInput" placeholder="Search Python scripts, XLOOKUP, Windows shortcuts..." 
                      class="w-full pl-12 pr-28 py-3.5 rounded-2xl border border-slate-300 bg-white shadow-lg shadow-slate-200/50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-slate-800 text-sm">
-              <button onclick="window.location.hash='#/browse'" class="absolute right-2 px-4 py-2 rounded-xl bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700 transition">
+              <button onclick="App.runHeroSearch()" class="absolute right-2 px-4 py-2 rounded-xl bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700 transition">
                 Search
               </button>
             </div>
@@ -446,7 +446,7 @@
         </div>
         <div class="flex items-center gap-3">
           <a href="#/labs" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition">
-            Try Excel Labs
+            Open Sandbox
           </a>
           <a href="#/courses" class="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold transition">
             More Lessons
@@ -567,7 +567,7 @@
         </p>
 
         <!-- Lab Navigation Switcher -->
-        <div class="mt-6 inline-flex p-1.5 rounded-2xl bg-slate-200/80 backdrop-blur border border-slate-300 gap-1.5">
+        <div class="mt-6 inline-flex flex-wrap justify-center p-1.5 rounded-2xl bg-slate-200/80 backdrop-blur border border-slate-300 gap-1.5">
           <button id="labTabBtn_excel" onclick="InteractiveLab.switchLab('excel')" 
                   class="px-5 py-2.5 rounded-xl font-bold text-xs bg-blue-600 text-white shadow-md shadow-blue-500/20 transition flex items-center gap-2">
             <i class="fa-solid fa-table-cells text-emerald-300"></i>
@@ -761,7 +761,7 @@
                   <span class="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
                     <i class="fa-solid fa-code text-blue-500"></i> Python Code Editor
                   </span>
-                  <span class="text-[11px] text-slate-400 font-mono">Press Tab to indent</span>
+                  <span class="text-[11px] text-slate-400 font-mono">Tab = indent · Ctrl+Enter = run</span>
                 </div>
                 <textarea id="pythonCodeInput" rows="16" spellcheck="false"
                           class="w-full p-4 rounded-2xl bg-slate-950 text-slate-100 font-mono text-xs leading-relaxed focus:outline-none focus:ring-2 focus:ring-blue-500 border border-slate-800 resize-y shadow-inner"></textarea>
@@ -836,7 +836,7 @@ Click 'Run Code' above to execute your Python script...
                       JavaScript
                     </button>
                   </div>
-                  <span class="text-[11px] text-slate-400 font-mono">Live Sync Active</span>
+                  <span id="webLabStatus" class="text-[11px] text-slate-400 font-mono"><i class="fa-solid fa-circle text-emerald-500 text-[7px] mr-1"></i>Live preview on</span>
                 </div>
 
                 <!-- HTML Container -->
@@ -868,7 +868,7 @@ Click 'Run Code' above to execute your Python script...
                     </button>
                   </div>
                   <div id="webConsoleOutput" class="h-20 overflow-y-auto font-mono text-xs text-slate-300 space-y-1">
-                    <span class="text-slate-500 font-mono text-[11px]">Console ready. console.log statements appear here.</span>
+                    <span data-placeholder class="text-slate-500 font-mono text-[11px]">Console ready. console.log statements appear here.</span>
                   </div>
                 </div>
 
@@ -889,12 +889,14 @@ Click 'Run Code' above to execute your Python script...
                     <span class="w-2.5 h-2.5 rounded-full bg-rose-400"></span>
                     <span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
                     <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
-                    <span class="ml-2 text-[11px] font-mono text-slate-400 bg-white px-3 py-0.5 rounded-md border border-slate-200 flex-1">
+                    <span class="ml-2 text-[11px] font-mono text-slate-400 bg-white px-3 py-0.5 rounded-md border border-slate-200 flex-1 truncate">
                       https://bargisy-eschool.local/sandbox
                     </span>
+                    <button onclick="InteractiveLab.runWebPreview()" class="text-slate-400 hover:text-indigo-600 px-1" title="Reload preview"><i class="fa-solid fa-rotate-right text-xs"></i></button>
+                    <button onclick="InteractiveLab.openWebPreviewInNewTab()" class="text-slate-400 hover:text-indigo-600 px-1" title="Open in new tab"><i class="fa-solid fa-up-right-from-square text-xs"></i></button>
                   </div>
                   
-                  <iframe id="webLabPreviewIframe" class="w-full flex-1 border-none min-h-[380px]"></iframe>
+                  <iframe id="webLabPreviewIframe" title="Live preview" sandbox="allow-scripts allow-modals allow-forms allow-popups" class="w-full flex-1 border-none min-h-[380px] bg-white"></iframe>
                 </div>
               </div>
 
@@ -1170,13 +1172,13 @@ Click 'Run Code' above to execute your Python script...
   </footer>
 
   <!-- App Scripts with explicit UTF-8 and Cache-Busting -->
-  <script charset="UTF-8" src="js/interactive.js?v=20261114_final"></script>
-  <script charset="UTF-8" src="js/excel-lessons.js?v=20261114_final"></script>
-  <script charset="UTF-8" src="js/python-lessons.js?v=20261114_final"></script>
-  <script charset="UTF-8" src="js/frontend-lessons.js?v=20261114_final"></script>
-  <script charset="UTF-8" src="js/it-lessons.js?v=20261114_final"></script>
-  <script charset="UTF-8" src="js/editor.js?v=20261114_final"></script>
-  <script charset="UTF-8" src="js/app.js?v=20261114_final"></script>
+  <script charset="UTF-8" src="js/interactive.js?v=20261114_fix2"></script>
+  <script charset="UTF-8" src="js/excel-lessons.js?v=20261114_fix2"></script>
+  <script charset="UTF-8" src="js/python-lessons.js?v=20261114_fix2"></script>
+  <script charset="UTF-8" src="js/frontend-lessons.js?v=20261114_fix2"></script>
+  <script charset="UTF-8" src="js/it-lessons.js?v=20261114_fix2"></script>
+  <script charset="UTF-8" src="js/editor.js?v=20261114_fix2"></script>
+  <script charset="UTF-8" src="js/app.js?v=20261114_fix2"></script>
 
 </body>
 </html>

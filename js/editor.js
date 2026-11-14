@@ -802,15 +802,15 @@ const EditorStudio = {
     if (window.marked) {
       renderedMarkdown = window.marked.parse(content || "*Start writing your lesson content in the editor to see the live preview here...*");
     } else {
-      renderedMarkdown = `<pre>${content}</pre>`;
+      renderedMarkdown = `<pre>${App.escapeHtml(content)}</pre>`;
     }
 
     previewEl.innerHTML = `
       <div class="mb-4 pb-3 border-b border-slate-200">
         <span class="text-xs uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">
-          ${categoryNames[category] || category}
+          ${App.escapeHtml(categoryNames[category] || category)}
         </span>
-        <h1 class="text-2xl font-extrabold text-slate-900 mt-2">${title}</h1>
+        <h1 class="text-2xl font-extrabold text-slate-900 mt-2">${App.escapeHtml(title)}</h1>
       </div>
       <div class="article-content">
         ${renderedMarkdown}
@@ -984,11 +984,14 @@ const EditorStudio = {
       };
 
       const dateStr = a.updated_at ? a.updated_at.split(" ")[0] : "Recently";
+      const esc = (v) => App.escapeHtml(v);
+      const idArg = App.escapeAttrJs(a.id);
+      const isCustom = typeof a.id === "string" && a.id.startsWith("art_");
 
       return `
         <tr class="hover:bg-slate-50/80 transition">
           <td class="px-6 py-4">
-            <div class="font-semibold text-slate-900 line-clamp-1">${a.title}</div>
+            <div class="font-semibold text-slate-900 line-clamp-1">${esc(a.title)}</div>
             <div class="text-xs text-slate-500 flex items-center gap-2 mt-0.5">
               <span><i class="fa-regular fa-clock"></i> ${a.read_time} min read</span>
               <span>•</span>
@@ -999,32 +1002,32 @@ const EditorStudio = {
           </td>
           <td class="px-6 py-4 text-sm text-slate-600">
             <span class="px-2 py-1 rounded bg-slate-100 font-medium text-xs">
-              ${categoryLabels[a.category] || a.category}
+              ${esc(categoryLabels[a.category] || a.category)}
             </span>
           </td>
           <td class="px-6 py-4">
             ${statusBadge}
           </td>
           <td class="px-6 py-4 text-sm text-slate-500">
-            ${a.author}
+            ${esc(a.author)}
           </td>
           <td class="px-6 py-4 text-right">
             <div class="inline-flex items-center gap-2">
-              <button onclick="EditorStudio.editArticle(${a.id})" class="px-3 py-1.5 text-xs font-medium bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg transition" title="Edit Article">
+              <button onclick="EditorStudio.editArticle('${idArg}')" class="px-3 py-1.5 text-xs font-medium bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg transition" title="Edit Article">
                 <i class="fa-solid fa-pen-to-square"></i> Edit
               </button>
               
-              <button onclick="EditorStudio.togglePublish(${a.id})" class="px-3 py-1.5 text-xs font-medium ${isDraft ? 'bg-emerald-600 text-white hover:bg-emerald-700' : 'bg-amber-50 text-amber-800 hover:bg-amber-100'} rounded-lg transition" title="${isDraft ? 'Publish to live website' : 'Revert to draft'}">
+              <button onclick="EditorStudio.togglePublish('${idArg}')" class="px-3 py-1.5 text-xs font-medium ${isDraft ? 'bg-emerald-600 text-white hover:bg-emerald-700' : 'bg-amber-50 text-amber-800 hover:bg-amber-100'} rounded-lg transition" title="${isDraft ? 'Publish to live website' : 'Revert to draft'}">
                 <i class="fa-solid ${isDraft ? 'fa-rocket' : 'fa-box-archive'}"></i> ${isDraft ? 'Publish' : 'Unpublish'}
               </button>
 
-              <button onclick="App.navigateToArticle('${a.slug}')" class="p-1.5 text-slate-400 hover:text-slate-700 transition" title="View Preview">
+              <button onclick="App.navigateToArticle('${App.escapeAttrJs(a.slug)}')" class="p-1.5 text-slate-400 hover:text-slate-700 transition" title="View Preview">
                 <i class="fa-solid fa-arrow-up-right-from-square"></i>
               </button>
 
-              <button onclick="EditorStudio.deleteArticle(${a.id}, '${a.title.replace(/'/g, "\\'")}')" class="p-1.5 text-rose-400 hover:text-rose-600 transition" title="Delete">
+              ${isCustom ? `<button onclick="EditorStudio.deleteArticle('${idArg}', '${App.escapeAttrJs(a.title)}')" class="p-1.5 text-rose-400 hover:text-rose-600 transition" title="Delete">
                 <i class="fa-solid fa-trash-can"></i>
-              </button>
+              </button>` : ""}
             </div>
           </td>
         </tr>

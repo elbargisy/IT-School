@@ -75,6 +75,11 @@ const InteractiveLab = {
     const pyInput = document.getElementById("pythonCodeInput");
     if (pyInput) {
       pyInput.addEventListener("keydown", (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+          e.preventDefault();
+          this.runPythonCode();
+          return;
+        }
         if (e.key === "Tab") {
           e.preventDefault();
           const start = pyInput.selectionStart;
@@ -574,11 +579,11 @@ for i, sale in enumerate(sales_records, 1):
     total_sales += sale
     commission = sale * 0.05 if sale >= 10000 else sale * 0.02
     total_bonus += commission
-    print(f"Deal #{i}: ${sale:,} -> Commission: ${commission:,.2f}")
+    print(f"Deal #{i}: \${sale:,} -> Commission: \${commission:,.2f}")
 
 print("-" * 40)
-print(f"Total Revenue Generated: ${total_sales:,}")
-print(f"Total Commission Payout: ${total_bonus:,.2f}")
+print(f"Total Revenue Generated: \${total_sales:,}")
+print(f"Total Commission Payout: \${total_bonus:,.2f}")
 `,
     dict: `# 4. Dictionaries & Data Lookups
 inventory = {
@@ -594,9 +599,9 @@ if item:
     total_value = item["price"] * item["stock"]
     print(f"Found SKU: {search_sku}")
     print(f"Product: {item['name']}")
-    print(f"Unit Price: ${item['price']}")
+    print(f"Unit Price: \${item['price']}")
     print(f"In Stock: {item['stock']} units")
-    print(f"Inventory Worth: ${total_value:,}")
+    print(f"Inventory Worth: \${total_value:,}")
 else:
     print(f"SKU {search_sku} not found in database.")
 `,
@@ -644,7 +649,16 @@ for idx, amount in enumerate(orders, 1):
     // Attempt execution using Skulpt if available
     if (typeof Sk !== "undefined" && Sk.misceval) {
       let outputBuffer = "";
+      Sk.execLimit = 10000; // stop runaway infinite loops after 10 seconds
       Sk.configure({
+        __future__: Sk.python3,
+        execLimit: 10000,
+        inputfunTakesPrompt: true,
+        inputfun: function(promptText) {
+          const answer = window.prompt(promptText || "Python input():", "");
+          outputBuffer += (promptText || "") + (answer || "") + "\n";
+          return answer === null ? "" : answer;
+        },
         output: function(text) {
           outputBuffer += text;
         },
@@ -674,10 +688,10 @@ for idx, amount in enumerate(orders, 1):
       return;
     }
 
-    // Built-in Lightweight Client-side Fallback Interpreter
-    setTimeout(() => {
-      this.executePythonFallback(code, outputEl);
-    }, 150);
+    // Skulpt failed to load (offline, or CDN blocked)
+    outputEl.innerHTML = `<span class="text-amber-400 font-bold">>>> Python engine not available</span>\n\n` +
+      `The in-browser Python runtime (Skulpt) could not be loaded.\n` +
+      `Check your internet connection or ad-blocker, then reload the page and try again.`;
   },
 
   executePythonFallback(code, outputEl) {
@@ -1036,7 +1050,7 @@ addBtn.addEventListener('click', () => {
 
   clearWebConsole() {
     const out = document.getElementById("webConsoleOutput");
-    if (out) out.innerHTML = `<span class="text-slate-500 font-mono text-[11px]">Console ready. console.log statements appear here.</span>`;
+    if (out) out.innerHTML = `<span data-placeholder class="text-slate-500 font-mono text-[11px]">Console ready. console.log statements appear here.</span>`;
   },
 
   runWebPreview() {
@@ -1046,52 +1060,107 @@ addBtn.addEventListener('click', () => {
     const iframe = document.getElementById("webLabPreviewIframe");
     if (!iframe) return;
 
-    // Build standalone HTML payload with customized console bridge
-    const payload = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <meta charset="utf-8">
-        <style>
-          ${css}
-        </style>
-        <script>
-          // Override console.log to broadcast to parent window
-          const _log = console.log;
-          console.log = function(...args) {
-            _log.apply(console, args);
-            window.parent.postMessage({
-              type: 'WEB_LAB_CONSOLE',
-              message: args.map(a => typeof a === 'object' ? JSON.stringify(a) : String(a)).join(' ')
-            }, '*');
-          };
-          window.onerror = function(msg, url, line) {
-            window.parent.postMessage({
-              type: 'WEB_LAB_CONSOLE',
-              error: true,
-              message: 'Error: ' + msg + ' (Line ' + line + ')'
-            }, '*');
-          };
-        </script>
-      </head>
-      <body>
-        ${html}
-        <script>
-          try {
-            ${js}
-          } catch(err) {
-            console.log('Runtime Error: ' + err.message);
-          }
-        </script>
-      </body>
-      </html>
-    `;
+    // Prevent user code from closing our <style>/<script> wrappers early
+    const safeCss = css.replace(/<\/style/gi, "<\\/style");
+    const safeJs = js.replace(/<\/script/gi, "<\\/script");
 
-    iframe.srcdoc = payload;
+    // Console bridge: forwards console.* and runtime errors to the parent page
+    const bridge = [
+      "(function(){",
+      "  function fmt(a){ try { return (a !== null && typeof a === 'object') ? JSON.stringify(a) : String(a); } catch(e){ return String(a); } }",
+      "  function send(level, args){ try { parent.postMessage({ type: 'WEB_LAB_CONSOLE', level: level, error: level === 'error', message: Array.prototype.map.call(args, fmt).join(' ') }, '*'); } catch(e){} }",
+      "  ['log','info','warn','error'].forEach(function(level){",
+      "    var orig = console[level];",
+      "    console[level] = function(){ try { orig.apply(console, arguments); } catch(e){} send(level, arguments); };",
+      "  });",
+      "  window.addEventListener('error', function(e){ send('error', ['Error: ' + e.message + (e.lineno ? ' (line ' + e.lineno + ')' : '')]); });",
+      "  // The preview is sandboxed (no access to the main site), so provide in-memory storage for lessons that use it",
+      "  ['localStorage','sessionStorage'].forEach(function(name){",
+      "    var ok = false; try { ok = !!window[name]; } catch(e) {}",
+      "    if (ok) return;",
+      "    var data = {};",
+      "    var store = { getItem: function(k){ k = String(k); return Object.prototype.hasOwnProperty.call(data, k) ? data[k] : null; }, setItem: function(k, v){ data[String(k)] = String(v); }, removeItem: function(k){ delete data[String(k)]; }, clear: function(){ data = {}; }, key: function(i){ return Object.keys(data)[i] || null; } };",
+      "    Object.defineProperty(store, 'length', { get: function(){ return Object.keys(data).length; } });",
+      "    try { Object.defineProperty(window, name, { value: store, configurable: true }); } catch(e) {}",
+      "  });",
+      "  window.addEventListener('unhandledrejection', function(e){ send('error', ['Unhandled promise rejection: ' + (e.reason && e.reason.message ? e.reason.message : e.reason)]); });",
+      "})();"
+    ].join("\n");
+
+    const payload = "<!DOCTYPE html>\n<html>\n<head>\n<meta charset=\"utf-8\">\n" +
+      "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n" +
+      "<script>" + bridge + "<\/script>\n" +
+      "<style>\n" + safeCss + "\n</style>\n</head>\n<body>\n" +
+      html +
+      "\n<script>\n" + safeJs + "\n<\/script>\n</body>\n</html>";
+
+    // Swap in a fresh iframe each run: re-assigning srcdoc while a previous
+    // render is still loading can leave the preview blank in some browsers,
+    // and a fresh frame also clears old timers/listeners from the last run.
+    const fresh = iframe.cloneNode(false);
+    fresh.removeAttribute("src");
+    fresh.srcdoc = payload;
+    iframe.replaceWith(fresh);
+
+    const status = document.getElementById("webLabStatus");
+    if (status) {
+      status.textContent = "Updated " + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    }
+  },
+
+  openWebPreviewInNewTab() {
+    const iframe = document.getElementById("webLabPreviewIframe");
+    if (!iframe || !iframe.srcdoc) return;
+    const blob = new Blob([iframe.srcdoc], { type: "text/html" });
+    window.open(URL.createObjectURL(blob), "_blank");
+  },
+
+  // Load a code snippet (from a lesson) into the matching sandbox
+  openInSandbox(lang, code) {
+    lang = (lang || "").toLowerCase();
+    if (lang === "python" || lang === "py") {
+      window.location.hash = "#/labs/python";
+      setTimeout(() => {
+        const input = document.getElementById("pythonCodeInput");
+        if (input) input.value = code;
+        this.runPythonCode();
+      }, 50);
+      return;
+    }
+
+    let target = "html";
+    if (lang === "css") target = "css";
+    else if (lang === "javascript" || lang === "js") target = "js";
+    // Some lessons label HTML markup as css/js; send real markup to the HTML tab
+    if (target !== "html" && /^\s*<(!--|!doctype|[a-z])/i.test(code)) target = "html";
+
+    window.location.hash = "#/labs/web";
+    setTimeout(() => {
+      const htmlEl = document.getElementById("webHtmlInput");
+      const cssEl = document.getElementById("webCssInput");
+      const jsEl = document.getElementById("webJsInput");
+      if (target === "html") {
+        // A full document goes in the HTML tab; clear the others so they don't interfere
+        if (htmlEl) htmlEl.value = code;
+        if (cssEl) cssEl.value = "";
+        if (jsEl) jsEl.value = "";
+      } else if (target === "css") {
+        if (cssEl) cssEl.value = code;
+        if (htmlEl && !htmlEl.value.trim()) htmlEl.value = "<h1>Hello CSS</h1>\n<p>Edit the HTML tab to see your styles applied.</p>";
+        if (jsEl) jsEl.value = "";
+      } else {
+        if (jsEl) jsEl.value = code;
+        if (htmlEl) htmlEl.value = "<h2>JavaScript Sandbox</h2>\n<p>Open the console below to see the output.</p>";
+        if (cssEl) cssEl.value = "body { font-family: system-ui, sans-serif; padding: 24px; color: #0f172a; }";
+      }
+      this.switchWebTab(target);
+      this.clearWebConsole();
+      this.runWebPreview();
+    }, 50);
   },
 
   escapeHtml(str) {
-    return str
+    return String(str == null ? "" : str)
       .replace(/&/g, "&amp;")
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;")
@@ -1108,10 +1177,15 @@ window.addEventListener("message", (e) => {
 
     const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
     const isErr = e.data.error;
-    const msg = e.data.message;
+    const isWarn = e.data.level === 'warn';
+    const msg = String(e.data.message);
+
+    // Drop the "Console ready" placeholder on the first real message
+    const placeholder = consoleBox.querySelector("[data-placeholder]");
+    if (placeholder) placeholder.remove();
 
     const line = document.createElement("div");
-    line.className = isErr ? "text-rose-400 font-mono text-xs mt-1" : "text-emerald-400 font-mono text-xs mt-1";
+    line.className = isErr ? "text-rose-400 font-mono text-xs mt-1" : (isWarn ? "text-amber-300 font-mono text-xs mt-1" : "text-emerald-400 font-mono text-xs mt-1");
     line.innerHTML = `<span class="text-slate-500">[${time}]</span> ${InteractiveLab.escapeHtml(msg)}`;
     consoleBox.appendChild(line);
     consoleBox.scrollTop = consoleBox.scrollHeight;
