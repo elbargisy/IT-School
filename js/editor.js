@@ -293,25 +293,48 @@ btn.addEventListener('click', () => {
 
 // --- 2. ARTICLE STORE (LOCALSTORAGE DATABASE) ---
 const ArticleStore = {
-  STORAGE_KEY: "bargisy_eschool_articles_v2",
+  STORAGE_KEY: "bargisy_eschool_articles_v4",
 
-  init() {
+  getSeedArticles() {
     const excelLessons = (typeof window !== "undefined" && window.EXCEL_100_LESSONS) ? window.EXCEL_100_LESSONS : [];
-    const stored = localStorage.getItem(this.STORAGE_KEY);
-    
-    // Combine 100 Excel lessons with the programming and IT tracks
-    const allSeeds = [
+    const pythonLessons = (typeof window !== "undefined" && window.PYTHON_100_LESSONS) ? window.PYTHON_100_LESSONS : [];
+    const frontendLessons = (typeof window !== "undefined" && window.FRONTEND_ALL_LESSONS) ? window.FRONTEND_ALL_LESSONS : [];
+    const itLessons = (typeof window !== "undefined" && window.IT_100_LESSONS) ? window.IT_100_LESSONS : [];
+
+    return [
       ...excelLessons,
+      ...pythonLessons,
+      ...frontendLessons,
+      ...itLessons,
       ...DEFAULT_ARTICLES
     ];
+  },
 
+  init() {
+    const allSeeds = this.getSeedArticles();
+    const stored = localStorage.getItem(this.STORAGE_KEY);
+    
     if (!stored) {
+      // Migrate any user-created custom drafts from previous version
+      try {
+        const oldData = localStorage.getItem("bargisy_eschool_articles_v3") || localStorage.getItem("bargisy_eschool_articles_v2");
+        if (oldData) {
+          const parsedOld = JSON.parse(oldData);
+          const customArticles = parsedOld.filter(a => typeof a.id === "string" && a.id.startsWith("art_"));
+          if (customArticles.length > 0) {
+            allSeeds.unshift(...customArticles);
+          }
+        }
+      } catch (err) {
+        console.warn("Storage migration note:", err);
+      }
       this.saveAll(allSeeds);
     } else {
       try {
         const parsed = JSON.parse(stored);
-        if (parsed.length < 50 && excelLessons.length > 0) {
-          this.saveAll(allSeeds);
+        if (parsed.length < allSeeds.length) {
+          const customArticles = parsed.filter(a => typeof a.id === "string" && a.id.startsWith("art_"));
+          this.saveAll([...customArticles, ...allSeeds]);
         }
       } catch (e) {
         this.saveAll(allSeeds);
@@ -322,11 +345,10 @@ const ArticleStore = {
   getAllRaw() {
     try {
       const data = localStorage.getItem(this.STORAGE_KEY);
-      const excelLessons = (typeof window !== "undefined" && window.EXCEL_100_LESSONS) ? window.EXCEL_100_LESSONS : [];
-      return data ? JSON.parse(data) : [...excelLessons, ...DEFAULT_ARTICLES];
+      return data ? JSON.parse(data) : this.getSeedArticles();
     } catch (e) {
       console.error("Error reading localStorage:", e);
-      return DEFAULT_ARTICLES;
+      return this.getSeedArticles();
     }
   },
 
@@ -338,7 +360,7 @@ const ArticleStore = {
     }
   },
 
-  list({ status = null, category = "all", search = "" } = {}) {
+  list({ status = null, category = "all", track = null, search = "" } = {}) {
     let list = this.getAllRaw();
 
     if (status) {
@@ -349,20 +371,31 @@ const ArticleStore = {
       list = list.filter(a => a.category === category);
     }
 
+    if (track && track !== "all") {
+      if (track === "frontend") {
+        list = list.filter(a => a.track === "html" || a.track === "css" || a.track === "javascript");
+      } else {
+        list = list.filter(a => a.track === track);
+      }
+    }
+
     if (search && search.trim()) {
       const q = search.trim().toLowerCase();
       list = list.filter(a =>
         a.title.toLowerCase().includes(q) ||
         (a.summary && a.summary.toLowerCase().includes(q)) ||
-        (a.tags && a.tags.toLowerCase().includes(q))
+        (a.tags && a.tags.toLowerCase().includes(q)) ||
+        (a.track && a.track.toLowerCase().includes(q))
       );
     }
 
-    // When viewing Excel lessons, sort strictly in ascending lesson order (Lesson 01 to Lesson 100)
-    if (category === "excel") {
+    // When viewing lessons within a specific track or category, sort strictly in ascending sequential order
+    const isSpecificTrack = track && track !== "all";
+    const isSpecificCategory = category && category !== "all";
+    if (isSpecificTrack || isSpecificCategory) {
       return list.sort((a, b) => {
-        const numA = parseInt((a.title.match(/Lesson\s+(\d+)/i) || [0, a.id])[1], 10) || a.id || 0;
-        const numB = parseInt((b.title.match(/Lesson\s+(\d+)/i) || [0, b.id])[1], 10) || b.id || 0;
+        const numA = a.lesson_number || parseInt((a.title.match(/Lesson\s+(\d+)/i) || [0, 0])[1], 10) || 0;
+        const numB = b.lesson_number || parseInt((b.title.match(/Lesson\s+(\d+)/i) || [0, 0])[1], 10) || 0;
         return numA - numB;
       });
     }
@@ -626,7 +659,7 @@ const EditorStudio = {
   collectFormData(enforcedStatus = null) {
     const id = document.getElementById("editorArticleId").value;
     const title = document.getElementById("articleTitleInput").value.trim() || "Untitled Article";
-    const category = document.getElementById("articleCategoryInput").value;
+    const rawCategory = document.getElementById("articleCategoryInput").value;
     const difficulty = document.getElementById("articleDifficultyInput").value;
     const summary = document.getElementById("articleSummaryInput").value.trim();
     const tags = document.getElementById("articleTagsInput").value.trim();
@@ -639,10 +672,18 @@ const EditorStudio = {
       status = document.getElementById("editorCurrentStatus").value || "draft";
     }
 
+    let finalCategory = rawCategory;
+    let track = null;
+    if (["python", "html", "css", "javascript"].includes(rawCategory)) {
+      finalCategory = "programming";
+      track = rawCategory;
+    }
+
     return {
-      id: id ? parseInt(id, 10) : null,
+      id: id || null,
       title,
-      category,
+      category: finalCategory,
+      track: track,
       difficulty,
       summary,
       tags,
@@ -679,6 +720,10 @@ const EditorStudio = {
 
     const categoryNames = {
       programming: "Programming & Code",
+      python: "Python Track",
+      html: "HTML Track",
+      css: "CSS Track",
+      javascript: "JavaScript Track",
       computer_skills: "Computer & IT Skills",
       excel: "Excel & Spreadsheets",
       general: "General Tech"
