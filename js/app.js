@@ -47,6 +47,47 @@ const App = {
     }
   },
 
+  // Markdown -> HTML, turning ":::solution ... :::" blocks into hidden solution panels
+  renderLessonMarkdown(md) {
+    if (!window.marked) return `<pre>${this.escapeHtml(md)}</pre>`;
+    const solutions = [];
+    const withTokens = String(md || "").replace(/^:::solution[ \t]*\r?\n([\s\S]*?)^:::[ \t]*$/gm, (m, inner) => {
+      solutions.push(inner);
+      return `\n\nBARGISYSOLUTIONTOKEN${solutions.length - 1}\n\n`;
+    });
+    let html = window.marked.parse(withTokens);
+    solutions.forEach((inner, i) => {
+      const body = window.marked.parse(inner);
+      const block = `<div class="solution-block" data-solution>
+        <button type="button" class="solution-toggle" aria-expanded="false" onclick="App.toggleSolution(this)">
+          <i class="fa-solid fa-eye"></i><span>Show Solution</span>
+        </button>
+        <p class="solution-hint">Try the challenge yourself first, then check your answer here.</p>
+        <div class="solution-body" hidden>
+          <div class="solution-label"><i class="fa-solid fa-circle-check"></i> Solution</div>
+          ${body}
+        </div>
+      </div>`;
+      html = html.replace(new RegExp(`<p>BARGISYSOLUTIONTOKEN${i}</p>`), () => block);
+    });
+    return html;
+  },
+
+  toggleSolution(btn) {
+    const block = btn.closest("[data-solution]");
+    if (!block) return;
+    const body = block.querySelector(".solution-body");
+    const hint = block.querySelector(".solution-hint");
+    const open = body.hasAttribute("hidden");
+    if (open) body.removeAttribute("hidden"); else body.setAttribute("hidden", "");
+    if (hint) hint.style.display = open ? "none" : "";
+    btn.setAttribute("aria-expanded", open ? "true" : "false");
+    btn.innerHTML = open
+      ? '<i class="fa-solid fa-eye-slash"></i><span>Hide Solution</span>'
+      : '<i class="fa-solid fa-eye"></i><span>Show Solution</span>';
+    block.classList.toggle("is-open", open);
+  },
+
   escapeHtml(str) {
     return String(str == null ? "" : str)
       .replace(/&/g, "&amp;")
@@ -59,6 +100,11 @@ const App = {
   // Safe for use inside onclick="...('X')" attributes
   escapeAttrJs(str) {
     return String(str == null ? "" : str).replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/"/g, "&quot;");
+  },
+
+  firstSlug(arrName) {
+    const arr = window[arrName];
+    return (arr && arr[0]) ? this.escapeAttrJs(arr[0].slug) : "";
   },
 
   runHeroSearch() {
@@ -494,7 +540,7 @@ const App = {
                   <span>Browse All 100 Python Lessons</span>
                   <i class="fa-solid fa-arrow-right text-[10px]"></i>
                 </button>
-                <button onclick="App.navigateToArticle('python-lesson-01-introduction-to-python-skulpt-the-zen-of-python')" class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs transition shadow-sm flex items-center gap-1.5">
+                <button onclick="App.navigateToArticle('${App.firstSlug('PYTHON_100_LESSONS')}')" class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs transition shadow-sm flex items-center gap-1.5">
                   <span>Start Lesson 01</span>
                   <i class="fa-solid fa-play text-[10px]"></i>
                 </button>
@@ -552,7 +598,7 @@ const App = {
                     Open 100 JS
                   </button>
                 </div>
-                <button onclick="App.navigateToArticle('html-lesson-01-how-the-web-works-browsers-http-requests-html-structure')" class="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs transition shadow-sm flex items-center gap-1.5">
+                <button onclick="App.navigateToArticle('${App.firstSlug('HTML_20_LESSONS')}')" class="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs transition shadow-sm flex items-center gap-1.5">
                   <span>Start Web 01</span>
                   <i class="fa-solid fa-play text-[10px]"></i>
                 </button>
@@ -584,7 +630,7 @@ const App = {
               </p>
             </div>
             <div class="flex flex-wrap items-center gap-3">
-              <button onclick="App.navigateToArticle('css-lesson-01-introduction-to-css-how-styles-render-in-browsers')" class="px-5 py-2.5 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-xs transition shadow-lg shadow-sky-500/25 flex items-center gap-2">
+              <button onclick="App.navigateToArticle('${App.firstSlug('CSS_100_LESSONS')}')" class="px-5 py-2.5 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-xs transition shadow-lg shadow-sky-500/25 flex items-center gap-2">
                 <span>Start CSS Lesson 01</span>
                 <i class="fa-solid fa-arrow-right"></i>
               </button>
@@ -606,7 +652,7 @@ const App = {
               </p>
             </div>
             <div class="flex flex-wrap items-center gap-3">
-              <button onclick="App.navigateToArticle('js-lesson-01-introduction-to-javascript-the-engine-of-the-interactive-web')" class="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs transition shadow-lg shadow-amber-500/25 flex items-center gap-2">
+              <button onclick="App.navigateToArticle('${App.firstSlug('JS_100_LESSONS')}')" class="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs transition shadow-lg shadow-amber-500/25 flex items-center gap-2">
                 <span>Start JS Lesson 01</span>
                 <i class="fa-solid fa-arrow-right"></i>
               </button>
@@ -628,7 +674,7 @@ const App = {
               </p>
             </div>
             <div class="flex flex-wrap items-center gap-3">
-              <button onclick="App.navigateToArticle('html-lesson-01-how-the-web-works-browsers-http-requests-html-structure')" class="px-5 py-2.5 rounded-xl bg-orange-500 hover:bg-orange-400 text-slate-950 font-bold text-xs transition shadow-lg shadow-orange-500/25 flex items-center gap-2">
+              <button onclick="App.navigateToArticle('${App.firstSlug('HTML_20_LESSONS')}')" class="px-5 py-2.5 rounded-xl bg-orange-500 hover:bg-orange-400 text-slate-950 font-bold text-xs transition shadow-lg shadow-orange-500/25 flex items-center gap-2">
                 <span>Start HTML Lesson 01</span>
                 <i class="fa-solid fa-arrow-right"></i>
               </button>
@@ -650,7 +696,7 @@ const App = {
               </p>
             </div>
             <div class="flex flex-wrap items-center gap-3">
-              <button onclick="App.navigateToArticle('python-lesson-01-introduction-to-python-skulpt-the-zen-of-python')" class="px-5 py-2.5 rounded-xl bg-blue-500 hover:bg-blue-400 text-slate-950 font-bold text-xs transition shadow-lg shadow-blue-500/25 flex items-center gap-2">
+              <button onclick="App.navigateToArticle('${App.firstSlug('PYTHON_100_LESSONS')}')" class="px-5 py-2.5 rounded-xl bg-blue-500 hover:bg-blue-400 text-slate-950 font-bold text-xs transition shadow-lg shadow-blue-500/25 flex items-center gap-2">
                 <span>Start Python Lesson 01</span>
                 <i class="fa-solid fa-arrow-right"></i>
               </button>
@@ -696,7 +742,7 @@ const App = {
               </p>
             </div>
             <div class="flex flex-wrap items-center gap-3">
-              <button onclick="App.navigateToArticle('lesson-01-introduction-to-excel-the-ribbon-interface')" class="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs transition shadow-lg shadow-emerald-500/25 flex items-center gap-2">
+              <button onclick="App.navigateToArticle('${App.firstSlug('EXCEL_100_LESSONS')}')" class="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs transition shadow-lg shadow-emerald-500/25 flex items-center gap-2">
                 <span>Start Lesson 01</span>
                 <i class="fa-solid fa-arrow-right"></i>
               </button>
@@ -712,13 +758,13 @@ const App = {
               <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30 text-xs font-bold uppercase tracking-wider mb-2">
                 <i class="fa-solid fa-laptop-code"></i> Complete IT Curriculum: 100 Lessons (Ordered 1 to 100)
               </div>
-              <h2 class="text-2xl sm:text-3xl font-black text-white">Computer & IT Skills Mastery (Ordered 1 to 100)</h2>
+              <h2 class="text-2xl sm:text-3xl font-black text-white">Everyday Computer &amp; IT Skills (Ordered 1 to 100)</h2>
               <p class="text-xs sm:text-sm text-purple-100/90 mt-1.5 max-w-3xl leading-relaxed">
-                Professional technical training covering: Operating systems mastery (Windows 11, Linux, macOS), PC hardware diagnostics, networking commands, troubleshooting slow computers, and cybersecurity essentials.
+                Easy, practical everyday computer skills: Windows basics, files &amp; folders, time-saving shortcuts, internet &amp; email, Word/PowerPoint/PDF, cloud &amp; phone, staying safe from scams, Wi-Fi &amp; printers, and fixing common problems yourself.
               </p>
             </div>
             <div class="flex flex-wrap items-center gap-3">
-              <button onclick="App.navigateToArticle('it-lesson-01-computer-architecture-cpu-memory-hierarchy-bus-architecture-how-os-boots')" class="px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs transition shadow-lg shadow-purple-500/25 flex items-center gap-2">
+              <button onclick="App.navigateToArticle('${App.firstSlug('IT_100_LESSONS')}')" class="px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs transition shadow-lg shadow-purple-500/25 flex items-center gap-2">
                 <span>Start Lesson 01</span>
                 <i class="fa-solid fa-arrow-right"></i>
               </button>
@@ -887,7 +933,8 @@ const App = {
 
     let parsedHtml = "";
     if (window.marked) {
-      parsedHtml = window.marked.parse(updatedA.content);
+      // The page header already shows the title, so drop a leading "# Title" from the body
+      parsedHtml = this.renderLessonMarkdown(String(updatedA.content || "").replace(/^\s*#\s[^\n]*\n/, ""));
     } else {
       parsedHtml = `<pre>${this.escapeHtml(updatedA.content)}</pre>`;
     }

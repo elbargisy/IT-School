@@ -115,6 +115,9 @@ const InteractiveLab = {
       this.renderExcelPlayground();
     } else if (tabKey === 'web') {
       this.runWebPreview();
+    } else if (tabKey === 'python') {
+      // Start downloading the Python engine in the background
+      this.loadPyodideEngine().catch(() => {});
     }
   },
 
@@ -639,59 +642,181 @@ for idx, amount in enumerate(orders, 1):
     this.clearPythonConsole();
   },
 
-  runPythonCode() {
-    const code = document.getElementById("pythonCodeInput").value;
+  // ---------- Python engine ----------
+  // Primary: Pyodide (real CPython 3.12 compiled to WebAssembly - full standard library:
+  // json, re, csv, datetime, functools, pathlib, unittest, files...). Loaded on first use.
+  // Fallback: Skulpt (small, already on the page) if Pyodide cannot be downloaded.
+  PYODIDE_VERSION: "0.27.7",
+  pyodide: null,
+  pyodideLoading: null,
+
+  loadPyodideEngine() {
+    if (this.pyodide) return Promise.resolve(this.pyodide);
+    if (this.pyodideLoading) return this.pyodideLoading;
+    const base = `https://cdn.jsdelivr.net/pyodide/v${this.PYODIDE_VERSION}/full/`;
+    this.pyodideLoading = new Promise((resolve, reject) => {
+      const start = () => {
+        window.loadPyodide({ indexURL: base }).then(async (py) => {
+          // input() -> browser prompt; echo the answer like a real terminal
+          await py.runPythonAsync([
+            "import builtins, js",
+            "def _bargisy_input(prompt=''):",
+            "    r = js.prompt(str(prompt))",
+            "    v = '' if r is None else str(r)",
+            "    print(f'{prompt}{v}')",
+            "    return v",
+            "builtins.input = _bargisy_input",
+            "import os",
+            "os.makedirs('/home/pyodide/lab', exist_ok=True)",
+            "os.chdir('/home/pyodide/lab')"
+          ].join("\n"));
+          this.pyodide = py;
+          resolve(py);
+        }).catch(reject);
+      };
+      if (window.loadPyodide) return start();
+      const sc = document.createElement("script");
+      sc.src = base + "pyodide.js";
+      sc.onload = start;
+      sc.onerror = () => reject(new Error("Could not download the Python engine"));
+      document.head.appendChild(sc);
+    });
+    this.pyodideLoading.catch(() => { this.pyodideLoading = null; });
+    return this.pyodideLoading;
+  },
+
+  async runPythonCode() {
+    const input = document.getElementById("pythonCodeInput");
     const outputEl = document.getElementById("pythonConsoleOutput");
-    if (!outputEl) return;
+    if (!input || !outputEl) return;
+    const code = input.value;
+    if (this._pyRunning) return;
+    this._pyRunning = true;
 
-    outputEl.innerHTML = `<span class="text-blue-400">>>> Executing Python script...</span>\n`;
+    const firstLoad = !this.pyodide;
+    outputEl.innerHTML = firstLoad
+      ? `<span class="text-blue-400">>>> Loading the Python 3 engine (first run only, a few seconds)...</span>\n`
+      : `<span class="text-blue-400">>>> Running...</span>\n`;
 
-    // Attempt execution using Skulpt if available
-    if (typeof Sk !== "undefined" && Sk.misceval) {
-      let outputBuffer = "";
-      Sk.execLimit = 10000; // stop runaway infinite loops after 10 seconds
-      Sk.configure({
-        __future__: Sk.python3,
-        execLimit: 10000,
-        inputfunTakesPrompt: true,
-        inputfun: function(promptText) {
-          const answer = window.prompt(promptText || "Python input():", "");
-          outputBuffer += (promptText || "") + (answer || "") + "\n";
-          return answer === null ? "" : answer;
-        },
-        output: function(text) {
-          outputBuffer += text;
-        },
-        read: function(x) {
-          if (Sk.builtinFiles === undefined || Sk.builtinFiles["files"][x] === undefined) {
-            throw new Error("File not found: '" + x + "'");
-          }
-          return Sk.builtinFiles["files"][x];
+    let py = null;
+    try {
+      py = await this.loadPyodideEngine();
+    } catch (e) {
+      py = null;
+    }
+
+    try {
+      if (py) {
+        await this.runWithPyodide(py, code, outputEl);
+      } else if (typeof Sk !== "undefined" && Sk.misceval) {
+        await this.runWithSkulpt(code, outputEl, true);
+      } else {
+        outputEl.innerHTML = `<span class="text-amber-400 font-bold">>>> Python engine not available</span>\n\n` +
+          `The in-browser Python runtime could not be loaded.\n` +
+          `Check your internet connection or ad-blocker, then reload the page and try again.`;
+      }
+    } finally {
+      this._pyRunning = false;
+    }
+  },
+
+  async runWithPyodide(py, code, outputEl) {
+    let out = "";
+    py.setStdout({ batched: (s) => { out += s + "\n"; } });
+    py.setStderr({ batched: (s) => { out += s + "\n"; } });
+
+    // A fresh namespace for every run, plus a 10-second guard against infinite loops
+    // A real, fresh __main__ module, so unittest.main(), pickle, etc. can find user code
+    const ns = py.runPython([
+      "import sys as _s, types as _ty",
+      "_m = _ty.ModuleType('__main__')",
+      "_m.__dict__['__builtins__'] = __builtins__",
+      "_s.modules['__main__'] = _m",
+      "_m.__dict__"
+    ].join("\n"), { globals: py.globals.get("dict")() });
+    const guard = [
+      "import sys as _s, time as _t",
+      "_bargisy_deadline = _t.time() + 10",
+      "def _bargisy_trace(frame, event, arg):",
+      "    if _t.time() > _bargisy_deadline:",
+      "        _s.settrace(None)",
+      "        raise TimeoutError('Stopped: the code ran for more than 10 seconds (infinite loop?)')",
+      "    return _bargisy_trace",
+      "_s.settrace(_bargisy_trace)"
+    ].join("\n");
+
+    const t0 = performance.now();
+    try {
+      await py.runPythonAsync(guard, { globals: ns });
+      await py.runPythonAsync(code, { globals: ns, filename: "main.py" });
+      await py.runPythonAsync("import sys as _s\n_s.settrace(None)", { globals: ns });
+      const ms = (performance.now() - t0).toFixed(1);
+      outputEl.innerHTML = `<span class="text-emerald-400 font-bold">>>> Python 3 finished in ${ms} ms:</span>\n\n` +
+        this.escapeHtml(out || "(no output - use print() to show results)\n") +
+        `\n<span class="text-emerald-500 font-semibold">>>> Process exited with code 0</span>`;
+    } catch (err) {
+      try { await py.runPythonAsync("import sys as _s\n_s.settrace(None)"); } catch (e) {}
+      outputEl.innerHTML = (out ? this.escapeHtml(out) + "\n" : "") +
+        `<span class="text-rose-400 font-bold">>>> Python Traceback Error:</span>\n\n` +
+        `<span class="text-rose-300">${this.escapeHtml(this.cleanPythonTraceback(String(err && err.message ? err.message : err)))}</span>\n` +
+        `\n<span class="text-rose-500 font-semibold">>>> Process finished with exit code 1</span>`;
+    } finally {
+      try { ns.destroy(); } catch (e) {}
+    }
+  },
+
+  // Keep only the part of the traceback that belongs to the student's code
+  cleanPythonTraceback(msg) {
+    let lines = msg.split("\n");
+    // Hide frames from the sandbox's own helper code
+    const kept = [];
+    for (let i = 0; i < lines.length; i++) {
+      if (lines[i].includes('File "<exec>"')) {
+        while (i + 1 < lines.length && /^\s{4,}/.test(lines[i + 1])) i++;
+        continue;
+      }
+      kept.push(lines[i]);
+    }
+    lines = kept;
+    const idx = lines.findIndex(l => l.includes('File "main.py"'));
+    if (idx > -1) return ["Traceback (most recent call last):"].concat(lines.slice(idx)).join("\n").trim();
+    return msg.trim();
+  },
+
+  runWithSkulpt(code, outputEl, isFallback) {
+    let outputBuffer = "";
+    Sk.execLimit = 10000;
+    Sk.configure({
+      __future__: Sk.python3,
+      execLimit: 10000,
+      inputfunTakesPrompt: true,
+      inputfun: function(promptText) {
+        const answer = window.prompt(promptText || "Python input():", "");
+        outputBuffer += (promptText || "") + (answer || "") + "\n";
+        return answer === null ? "" : answer;
+      },
+      output: function(text) { outputBuffer += text; },
+      read: function(x) {
+        if (Sk.builtinFiles === undefined || Sk.builtinFiles["files"][x] === undefined) {
+          throw new Error("File not found: '" + x + "'");
         }
-      });
-
-      const startTime = performance.now();
-      const promise = Sk.misceval.asyncToPromise(() => {
-        return Sk.importMainWithBody("<stdin>", false, code, true);
-      });
-
-      promise.then(() => {
-        const elapsed = (performance.now() - startTime).toFixed(1);
-        outputEl.innerHTML = `<span class="text-emerald-400 font-bold">>>> Python 3.12 execution finished in ${elapsed}ms:</span>\n\n` +
+        return Sk.builtinFiles["files"][x];
+      }
+    });
+    const note = isFallback ? `<span class="text-amber-300">(Lite mode: the full Python engine could not be loaded, some modules are unavailable)</span>\n` : "";
+    const t0 = performance.now();
+    return Sk.misceval.asyncToPromise(() => Sk.importMainWithBody("<stdin>", false, code, true))
+      .then(() => {
+        const ms = (performance.now() - t0).toFixed(1);
+        outputEl.innerHTML = note + `<span class="text-emerald-400 font-bold">>>> Python finished in ${ms} ms:</span>\n\n` +
           this.escapeHtml(outputBuffer) +
           `\n<span class="text-emerald-500 font-semibold">>>> Process exited with code 0</span>`;
-      }).catch(err => {
-        outputEl.innerHTML = `<span class="text-rose-400 font-bold">>>> Python Traceback Error:</span>\n\n` +
+      })
+      .catch(err => {
+        outputEl.innerHTML = note + this.escapeHtml(outputBuffer) + `<span class="text-rose-400 font-bold">>>> Python Traceback Error:</span>\n\n` +
           `<span class="text-rose-300">${this.escapeHtml(err.toString())}</span>\n` +
           `\n<span class="text-rose-500 font-semibold">>>> Process finished with exit code 1</span>`;
       });
-      return;
-    }
-
-    // Skulpt failed to load (offline, or CDN blocked)
-    outputEl.innerHTML = `<span class="text-amber-400 font-bold">>>> Python engine not available</span>\n\n` +
-      `The in-browser Python runtime (Skulpt) could not be loaded.\n` +
-      `Check your internet connection or ad-blocker, then reload the page and try again.`;
   },
 
   executePythonFallback(code, outputEl) {

@@ -800,7 +800,7 @@ const EditorStudio = {
 
     let renderedMarkdown = "";
     if (window.marked) {
-      renderedMarkdown = window.marked.parse(content || "*Start writing your lesson content in the editor to see the live preview here...*");
+      renderedMarkdown = App.renderLessonMarkdown(content || "*Start writing your lesson content in the editor to see the live preview here...*");
     } else {
       renderedMarkdown = `<pre>${App.escapeHtml(content)}</pre>`;
     }
